@@ -1,3 +1,0 @@
-[console_scripts]
-print_events = event_reader.event_read:main
-
