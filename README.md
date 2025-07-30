@@ -1,6 +1,4 @@
 # ROS2 Humble package for reading and filtering events from Event Camera Metavision® EVK4 – HD
-
-## Overview
 This repository provides a package for ROS2 humble to read the topic "/event_camera/events", filter events using a spatio temporal boundary box, and publish the filtered event in image format (sensor_msgs/msg/image) to the topic "event_camera/filtered_image".
 
 The packages inside src are distributed as follows:  
