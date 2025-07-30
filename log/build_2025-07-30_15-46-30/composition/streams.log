@@ -1,0 +1,37 @@
+[0.021s] Invoking command in '/home/jonurce/Jon/ROS2Projects/idea_0_ws/build/composition': AMENT_PREFIX_PATH=/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_renderer:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_codecs:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_msgs:/opt/ros/humble/opt/openeb_vendor:/opt/ros/humble LD_LIBRARY_PATH=/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --build /home/jonurce/Jon/ROS2Projects/idea_0_ws/build/composition -- -j8 -l8
+[0.124s] [ 33%] Built target talker_component
+[0.128s] [ 50%] [32mBuilding CXX object CMakeFiles/listener_component.dir/src/listener_component.cpp.o[0m
+[19.338s] [ 66%] [32m[1mLinking CXX shared library liblistener_component.so[0m
+[20.328s] [ 66%] Built target listener_component
+[20.388s] [ 83%] [32mBuilding CXX object CMakeFiles/manual_composition.dir/src/manual_composition.cpp.o[0m
+[27.802s] [100%] [32m[1mLinking CXX executable manual_composition[0m
+[28.380s] [100%] Built target manual_composition
+[28.407s] Invoked command in '/home/jonurce/Jon/ROS2Projects/idea_0_ws/build/composition' returned '0': AMENT_PREFIX_PATH=/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_renderer:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_codecs:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_msgs:/opt/ros/humble/opt/openeb_vendor:/opt/ros/humble LD_LIBRARY_PATH=/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --build /home/jonurce/Jon/ROS2Projects/idea_0_ws/build/composition -- -j8 -l8
+[28.431s] Invoking command in '/home/jonurce/Jon/ROS2Projects/idea_0_ws/build/composition': AMENT_PREFIX_PATH=/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_renderer:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_codecs:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_msgs:/opt/ros/humble/opt/openeb_vendor:/opt/ros/humble LD_LIBRARY_PATH=/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --install /home/jonurce/Jon/ROS2Projects/idea_0_ws/build/composition
+[28.445s] -- Install configuration: ""
+[28.445s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/environment/library_path.sh
+[28.446s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/environment/library_path.dsv
+[28.446s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/lib/libtalker_component.so
+[28.446s] -- Installing: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/lib/liblistener_component.so
+[28.469s] -- Set runtime path of "/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/lib/liblistener_component.so" to ""
+[28.469s] -- Installing: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/lib/composition/manual_composition
+[28.470s] -- Set runtime path of "/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/lib/composition/manual_composition" to ""
+[28.470s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/launch
+[28.470s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/launch/composition_demo.launch.py
+[28.470s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/ament_index/resource_index/package_run_dependencies/composition
+[28.471s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/ament_index/resource_index/parent_prefix_path/composition
+[28.471s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/environment/ament_prefix_path.sh
+[28.471s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/environment/ament_prefix_path.dsv
+[28.471s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/environment/path.sh
+[28.471s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/environment/path.dsv
+[28.472s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/local_setup.bash
+[28.472s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/local_setup.sh
+[28.472s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/local_setup.zsh
+[28.472s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/local_setup.dsv
+[28.473s] -- Installing: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/package.dsv
+[28.473s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/ament_index/resource_index/packages/composition
+[28.473s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/ament_index/resource_index/rclcpp_components/composition
+[28.473s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/cmake/compositionConfig.cmake
+[28.474s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/cmake/compositionConfig-version.cmake
+[28.474s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/package.xml
+[28.476s] Invoked command in '/home/jonurce/Jon/ROS2Projects/idea_0_ws/build/composition' returned '0': AMENT_PREFIX_PATH=/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_renderer:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_codecs:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_msgs:/opt/ros/humble/opt/openeb_vendor:/opt/ros/humble LD_LIBRARY_PATH=/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --install /home/jonurce/Jon/ROS2Projects/idea_0_ws/build/composition

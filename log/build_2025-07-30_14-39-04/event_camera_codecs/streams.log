@@ -1,0 +1,52 @@
+[0.032s] Invoking command in '/home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_camera_codecs': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_camera_codecs -- -j8 -l8
+[0.110s] [35m[1mConsolidate compiler generated dependencies of target codec[0m
+[0.134s] [ 50%] Built target codec
+[0.156s] [35m[1mConsolidate compiler generated dependencies of target codec_perf[0m
+[0.187s] [100%] Built target codec_perf
+[0.542s] Invoked command in '/home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_camera_codecs' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_camera_codecs -- -j8 -l8
+[0.564s] Invoking command in '/home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_camera_codecs': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_camera_codecs
+[0.583s] -- Install configuration: ""
+[0.583s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/environment/library_path.sh
+[0.584s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/environment/library_path.dsv
+[0.584s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/include
+[0.584s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/include/event_camera_codecs
+[0.584s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/include/event_camera_codecs/libcaer_cmp_decoder.h
+[0.584s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/include/event_camera_codecs/evt3_decoder.h
+[0.584s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/include/event_camera_codecs/mono_encoder.h
+[0.585s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/include/event_camera_codecs/decoder.h
+[0.585s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/include/event_camera_codecs/evt3_encoder.h
+[0.585s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/include/event_camera_codecs/mono_decoder.h
+[0.585s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/include/event_camera_codecs/evt3_types.h
+[0.585s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/include/event_camera_codecs/trigger_decoder.h
+[0.585s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/include/event_camera_codecs/event_processor.h
+[0.585s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/include/event_camera_codecs/decoder_factory.h
+[0.585s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/include/event_camera_codecs/encoder.h
+[0.586s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/include/event_camera_codecs/event_packet.h
+[0.586s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/include/event_camera_codecs/libcaer_decoder.h
+[0.586s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/include/event_camera_codecs/ros1_ros2_compat.h
+[0.586s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/include/event_camera_codecs/libcaer_cmp_types.h
+[0.586s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/include/event_camera_codecs/noop_event_processor.h
+[0.586s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/lib/libcodec.so
+[0.587s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/lib/event_camera_codecs/codec_perf
+[0.587s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/ament_index/resource_index/package_run_dependencies/event_camera_codecs
+[0.587s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/ament_index/resource_index/parent_prefix_path/event_camera_codecs
+[0.587s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/environment/ament_prefix_path.sh
+[0.587s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/environment/ament_prefix_path.dsv
+[0.587s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/environment/path.sh
+[0.587s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/environment/path.dsv
+[0.588s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/local_setup.bash
+[0.588s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/local_setup.sh
+[0.588s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/local_setup.zsh
+[0.589s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/local_setup.dsv
+[0.589s] -- Installing: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/package.dsv
+[0.589s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/ament_index/resource_index/packages/event_camera_codecs
+[0.589s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/cmake/codecTargetsExport.cmake
+[0.590s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/cmake/codecTargetsExport-noconfig.cmake
+[0.591s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/cmake/ament_cmake_export_targets-extras.cmake
+[0.591s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/cmake/ament_cmake_export_dependencies-extras.cmake
+[0.592s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/cmake/ament_cmake_export_include_directories-extras.cmake
+[0.592s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/cmake/ament_cmake_export_libraries-extras.cmake
+[0.592s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/cmake/event_camera_codecsConfig.cmake
+[0.592s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/cmake/event_camera_codecsConfig-version.cmake
+[0.593s] -- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/package.xml
+[0.593s] Invoked command in '/home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_camera_codecs' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_camera_codecs

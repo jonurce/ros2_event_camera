@@ -1,0 +1,22 @@
+[1.228s] Invoking command in '/home/jonurce/Jon/ROS2Projects/idea_0_ws/src/event_reader': PYTHONPATH=/home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_reader/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/event_reader build --build-base /home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_reader/build install --record /home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_reader/install.log --single-version-externally-managed install_data
+[1.715s] running egg_info
+[1.717s] writing ../../build/event_reader/event_reader.egg-info/PKG-INFO
+[1.717s] writing dependency_links to ../../build/event_reader/event_reader.egg-info/dependency_links.txt
+[1.717s] writing entry points to ../../build/event_reader/event_reader.egg-info/entry_points.txt
+[1.718s] writing requirements to ../../build/event_reader/event_reader.egg-info/requires.txt
+[1.718s] writing top-level names to ../../build/event_reader/event_reader.egg-info/top_level.txt
+[1.721s] reading manifest file '../../build/event_reader/event_reader.egg-info/SOURCES.txt'
+[1.722s] adding license file 'LICENSE'
+[1.723s] writing manifest file '../../build/event_reader/event_reader.egg-info/SOURCES.txt'
+[1.724s] running build
+[1.724s] running build_py
+[1.724s] running install
+[1.726s] running install_lib
+[1.730s] running install_data
+[1.730s] running install_egg_info
+[1.734s] removing '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/lib/python3.10/site-packages/event_reader-0.0.0-py3.10.egg-info' (and everything under it)
+[1.735s] Copying ../../build/event_reader/event_reader.egg-info to /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/lib/python3.10/site-packages/event_reader-0.0.0-py3.10.egg-info
+[1.738s] running install_scripts
+[1.782s] Installing print_events script to /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/lib/event_reader
+[1.782s] writing list of installed files to '/home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_reader/install.log'
+[1.862s] Invoked command in '/home/jonurce/Jon/ROS2Projects/idea_0_ws/src/event_reader' returned '0': PYTHONPATH=/home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_reader/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/event_reader build --build-base /home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_reader/build install --record /home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_reader/install.log --single-version-externally-managed install_data

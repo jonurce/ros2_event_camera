@@ -1,0 +1,10 @@
+In file included from [01m[K/home/jonurce/Jon/ROS2Projects/idea_0_ws/src/composition/src/listener_component.cpp:1[m[K:
+[01m[K/home/jonurce/Jon/ROS2Projects/idea_0_ws/src/composition/include/composition/listener_component.hpp:[m[K In member function ‘[01m[Kvirtual void composition::Listener::MyProcessor::eventCD(uint64_t, uint16_t, uint16_t, uint8_t)[m[K’:
+[01m[K/home/jonurce/Jon/ROS2Projects/idea_0_ws/src/composition/include/composition/listener_component.hpp:35:34:[m[K [01;35m[Kwarning: [m[Kunused parameter ‘[01m[Kt[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-parameter-Wunused-parameter]8;;[m[K]
+   35 |     inline void eventCD([01;35m[Kuint64_t t[m[K, uint16_t ex, uint16_t ey, uint8_t polarity) override {
+      |                         [01;35m[K~~~~~~~~~^[m[K
+In file included from [01m[K/home/jonurce/Jon/ROS2Projects/idea_0_ws/src/composition/src/manual_composition.cpp:2[m[K:
+[01m[K/home/jonurce/Jon/ROS2Projects/idea_0_ws/src/composition/include/composition/listener_component.hpp:[m[K In member function ‘[01m[Kvirtual void composition::Listener::MyProcessor::eventCD(uint64_t, uint16_t, uint16_t, uint8_t)[m[K’:
+[01m[K/home/jonurce/Jon/ROS2Projects/idea_0_ws/src/composition/include/composition/listener_component.hpp:35:34:[m[K [01;35m[Kwarning: [m[Kunused parameter ‘[01m[Kt[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-parameter-Wunused-parameter]8;;[m[K]
+   35 |     inline void eventCD([01;35m[Kuint64_t t[m[K, uint16_t ex, uint16_t ey, uint8_t polarity) override {
+      |                         [01;35m[K~~~~~~~~~^[m[K

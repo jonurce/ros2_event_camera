@@ -1,0 +1,15 @@
+In file included from [01m[K/home/jonurce/Jon/ROS2Projects/idea_0_ws/src/composition/src/listener_component.cpp:1[m[K:
+[01m[K/home/jonurce/Jon/ROS2Projects/idea_0_ws/src/composition/include/composition/listener_component.hpp:[m[K In member function ‘[01m[Kvirtual void composition::Listener::MyProcessor::eventCD(uint64_t, uint16_t, uint16_t, uint8_t)[m[K’:
+[01m[K/home/jonurce/Jon/ROS2Projects/idea_0_ws/src/composition/include/composition/listener_component.hpp:35:34:[m[K [01;35m[Kwarning: [m[Kunused parameter ‘[01m[Kt[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-parameter-Wunused-parameter]8;;[m[K]
+   35 |     inline void eventCD([01;35m[Kuint64_t t[m[K, uint16_t ex, uint16_t ey, uint8_t polarity) override {
+      |                         [01;35m[K~~~~~~~~~^[m[K
+[01m[K/home/jonurce/Jon/ROS2Projects/idea_0_ws/src/composition/src/listener_component.cpp:[m[K In member function ‘[01m[Kvoid composition::Listener::timer_callback()[m[K’:
+[01m[K/home/jonurce/Jon/ROS2Projects/idea_0_ws/src/composition/src/listener_component.cpp:98:26:[m[K [01;31m[Kerror: [m[K‘[01m[Kpixel_indices_[m[K’ was not declared in this scope
+   98 |     for (const auto &i : [01;31m[Kpixel_indices_[m[K) {
+      |                          [01;31m[K^~~~~~~~~~~~~~[m[K
+[01m[K/home/jonurce/Jon/ROS2Projects/idea_0_ws/src/composition/src/listener_component.cpp:105:5:[m[K [01;31m[Kerror: [m[K‘[01m[Kpixel_indices_[m[K’ was not declared in this scope
+  105 |     [01;31m[Kpixel_indices_[m[K.clear();
+      |     [01;31m[K^~~~~~~~~~~~~~[m[K
+gmake[2]: *** [CMakeFiles/listener_component.dir/build.make:76: CMakeFiles/listener_component.dir/src/listener_component.cpp.o] Error 1
+gmake[1]: *** [CMakeFiles/Makefile2:167: CMakeFiles/listener_component.dir/all] Error 2
+gmake: *** [Makefile:146: all] Error 2

@@ -1,0 +1,334 @@
+[0.000000] (-) TimerEvent: {}
+[0.001297] (-) JobUnselected: {'identifier': 'event_camera_codecs'}
+[0.001775] (-) JobUnselected: {'identifier': 'event_reader'}
+[0.001886] (composition) JobQueued: {'identifier': 'composition', 'dependencies': OrderedDict([('event_camera_codecs', '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs')])}
+[0.001989] (composition) JobStarted: {'identifier': 'composition'}
+[0.019324] (composition) JobProgress: {'identifier': 'composition', 'progress': 'cmake'}
+[0.020651] (composition) JobProgress: {'identifier': 'composition', 'progress': 'build'}
+[0.021918] (composition) Command: {'cmd': ['/usr/bin/cmake', '--build', '/home/jonurce/Jon/ROS2Projects/idea_0_ws/build/composition', '--', '-j8', '-l8'], 'cwd': '/home/jonurce/Jon/ROS2Projects/idea_0_ws/build/composition', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'jonurce'), ('XDG_SESSION_TYPE', 'x11'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/lib:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_renderer/lib:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_codecs/lib:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_msgs/lib:/opt/ros/humble/lib/aarch64-linux-gnu:/opt/ros/humble/opt/openeb_vendor/lib:/opt/ros/humble/lib'), ('HOME', '/home/jonurce'), ('DESKTOP_SESSION', 'ubuntu'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('DBUS_STARTER_BUS_TYPE', 'session'), ('SYSTEMD_EXEC_PID', '2242'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1001/bus,guid=40e0ea4c8b50685a86923f946889c82f'), ('COLORTERM', 'truecolor'), ('IM_CONFIG_PHASE', '1'), ('COLCON_PREFIX_PATH', '/home/jonurce/Jon/ROS2Projects/test_ws/install'), ('ROS_DISTRO', 'humble'), ('GTK_IM_MODULE', 'ibus'), ('LOGNAME', 'jonurce'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'jonurce'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '1'), ('WINDOWPATH', '2'), ('PATH', '/opt/ros/humble/opt/openeb_vendor/bin:/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin:/home/jonurce/.local/share/JetBrains/Toolbox/scripts'), ('SESSION_MANAGER', 'local/pandect:@/tmp/.ICE-unix/2242,unix/pandect:/tmp/.ICE-unix/2242'), ('XDG_MENU_PREFIX', 'gnome-'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/25259c6b_b830_4a90_9b44_624fd351a348'), ('XDG_RUNTIME_DIR', '/run/user/1001'), ('DISPLAY', ':1'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1001/gdm/Xauthority'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('GNOME_TERMINAL_SERVICE', ':1.102'), ('SSH_AGENT_LAUNCHER', 'gnome-keyring'), ('SSH_AUTH_SOCK', '/run/user/1001/keyring/ssh'), ('ROS_DOMAIN_ID', '0'), ('AMENT_PREFIX_PATH', '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_renderer:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_codecs:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_msgs:/opt/ros/humble'), ('SHELL', '/bin/bash'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('GPG_AGENT_INFO', '/run/user/1001/gnupg/S.gpg-agent:0:1'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/jonurce/Jon/ROS2Projects/idea_0_ws/build/composition'), ('LC_ALL', 'en_US.UTF-8'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('DBUS_STARTER_ADDRESS', 'unix:path=/run/user/1001/bus,guid=40e0ea4c8b50685a86923f946889c82f'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/share/gnome:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_msgs/local/lib/python3.10/dist-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('VTE_VERSION', '6800'), ('CMAKE_PREFIX_PATH', '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_renderer:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_codecs:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_msgs:/opt/ros/humble/opt/openeb_vendor:/opt/ros/humble')]), 'shell': False}
+[0.099227] (-) TimerEvent: {}
+[0.111580] (composition) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target listener_component\x1b[0m\n'}
+[0.138321] (composition) StdoutLine: {'line': b'[ 33%] Built target talker_component\n'}
+[0.150508] (composition) StdoutLine: {'line': b'[ 50%] \x1b[32mBuilding CXX object CMakeFiles/listener_component.dir/src/listener_component.cpp.o\x1b[0m\n'}
+[0.199403] (-) TimerEvent: {}
+[0.300056] (-) TimerEvent: {}
+[0.400701] (-) TimerEvent: {}
+[0.501342] (-) TimerEvent: {}
+[0.601985] (-) TimerEvent: {}
+[0.702646] (-) TimerEvent: {}
+[0.803298] (-) TimerEvent: {}
+[0.903961] (-) TimerEvent: {}
+[1.004643] (-) TimerEvent: {}
+[1.105314] (-) TimerEvent: {}
+[1.205979] (-) TimerEvent: {}
+[1.306639] (-) TimerEvent: {}
+[1.407293] (-) TimerEvent: {}
+[1.508007] (-) TimerEvent: {}
+[1.608671] (-) TimerEvent: {}
+[1.709320] (-) TimerEvent: {}
+[1.809964] (-) TimerEvent: {}
+[1.910617] (-) TimerEvent: {}
+[2.011254] (-) TimerEvent: {}
+[2.111953] (-) TimerEvent: {}
+[2.212619] (-) TimerEvent: {}
+[2.313263] (-) TimerEvent: {}
+[2.413914] (-) TimerEvent: {}
+[2.514589] (-) TimerEvent: {}
+[2.615266] (-) TimerEvent: {}
+[2.715953] (-) TimerEvent: {}
+[2.816633] (-) TimerEvent: {}
+[2.917263] (-) TimerEvent: {}
+[3.017921] (-) TimerEvent: {}
+[3.118595] (-) TimerEvent: {}
+[3.219279] (-) TimerEvent: {}
+[3.319965] (-) TimerEvent: {}
+[3.420648] (-) TimerEvent: {}
+[3.521339] (-) TimerEvent: {}
+[3.622035] (-) TimerEvent: {}
+[3.722709] (-) TimerEvent: {}
+[3.823389] (-) TimerEvent: {}
+[3.924064] (-) TimerEvent: {}
+[4.024752] (-) TimerEvent: {}
+[4.125423] (-) TimerEvent: {}
+[4.226089] (-) TimerEvent: {}
+[4.326740] (-) TimerEvent: {}
+[4.427388] (-) TimerEvent: {}
+[4.528036] (-) TimerEvent: {}
+[4.628742] (-) TimerEvent: {}
+[4.729584] (-) TimerEvent: {}
+[4.830349] (-) TimerEvent: {}
+[4.931101] (-) TimerEvent: {}
+[5.031943] (-) TimerEvent: {}
+[5.132778] (-) TimerEvent: {}
+[5.233616] (-) TimerEvent: {}
+[5.334438] (-) TimerEvent: {}
+[5.435256] (-) TimerEvent: {}
+[5.536065] (-) TimerEvent: {}
+[5.636919] (-) TimerEvent: {}
+[5.737735] (-) TimerEvent: {}
+[5.838571] (-) TimerEvent: {}
+[5.939388] (-) TimerEvent: {}
+[6.040233] (-) TimerEvent: {}
+[6.141054] (-) TimerEvent: {}
+[6.241929] (-) TimerEvent: {}
+[6.342737] (-) TimerEvent: {}
+[6.443443] (-) TimerEvent: {}
+[6.544250] (-) TimerEvent: {}
+[6.644931] (-) TimerEvent: {}
+[6.745755] (-) TimerEvent: {}
+[6.846556] (-) TimerEvent: {}
+[6.947341] (-) TimerEvent: {}
+[7.047997] (-) TimerEvent: {}
+[7.148699] (-) TimerEvent: {}
+[7.249533] (-) TimerEvent: {}
+[7.350350] (-) TimerEvent: {}
+[7.451170] (-) TimerEvent: {}
+[7.551960] (-) TimerEvent: {}
+[7.652696] (-) TimerEvent: {}
+[7.753483] (-) TimerEvent: {}
+[7.854195] (-) TimerEvent: {}
+[7.955000] (-) TimerEvent: {}
+[8.055821] (-) TimerEvent: {}
+[8.156544] (-) TimerEvent: {}
+[8.257384] (-) TimerEvent: {}
+[8.358174] (-) TimerEvent: {}
+[8.458885] (-) TimerEvent: {}
+[8.559772] (-) TimerEvent: {}
+[8.660613] (-) TimerEvent: {}
+[8.761284] (-) TimerEvent: {}
+[8.862080] (-) TimerEvent: {}
+[8.962863] (-) TimerEvent: {}
+[9.063587] (-) TimerEvent: {}
+[9.164454] (-) TimerEvent: {}
+[9.265248] (-) TimerEvent: {}
+[9.366041] (-) TimerEvent: {}
+[9.466846] (-) TimerEvent: {}
+[9.567640] (-) TimerEvent: {}
+[9.668499] (-) TimerEvent: {}
+[9.769339] (-) TimerEvent: {}
+[9.870146] (-) TimerEvent: {}
+[9.970937] (-) TimerEvent: {}
+[10.071916] (-) TimerEvent: {}
+[10.172821] (-) TimerEvent: {}
+[10.273534] (-) TimerEvent: {}
+[10.374357] (-) TimerEvent: {}
+[10.475157] (-) TimerEvent: {}
+[10.576018] (-) TimerEvent: {}
+[10.676890] (-) TimerEvent: {}
+[10.778001] (-) TimerEvent: {}
+[10.878698] (-) TimerEvent: {}
+[10.979667] (-) TimerEvent: {}
+[11.080603] (-) TimerEvent: {}
+[11.181490] (-) TimerEvent: {}
+[11.282309] (-) TimerEvent: {}
+[11.383114] (-) TimerEvent: {}
+[11.483838] (-) TimerEvent: {}
+[11.584673] (-) TimerEvent: {}
+[11.685377] (-) TimerEvent: {}
+[11.786200] (-) TimerEvent: {}
+[11.887022] (-) TimerEvent: {}
+[11.987859] (-) TimerEvent: {}
+[12.088802] (-) TimerEvent: {}
+[12.189640] (-) TimerEvent: {}
+[12.290479] (-) TimerEvent: {}
+[12.391370] (-) TimerEvent: {}
+[12.492231] (-) TimerEvent: {}
+[12.592913] (-) TimerEvent: {}
+[12.693738] (-) TimerEvent: {}
+[12.794534] (-) TimerEvent: {}
+[12.895611] (-) TimerEvent: {}
+[12.996423] (-) TimerEvent: {}
+[13.097484] (-) TimerEvent: {}
+[13.198703] (-) TimerEvent: {}
+[13.299452] (-) TimerEvent: {}
+[13.400464] (-) TimerEvent: {}
+[13.501295] (-) TimerEvent: {}
+[13.602128] (-) TimerEvent: {}
+[13.703093] (-) TimerEvent: {}
+[13.804045] (-) TimerEvent: {}
+[13.904894] (-) TimerEvent: {}
+[14.005710] (-) TimerEvent: {}
+[14.106372] (-) TimerEvent: {}
+[14.207172] (-) TimerEvent: {}
+[14.307977] (-) TimerEvent: {}
+[14.408818] (-) TimerEvent: {}
+[14.509636] (-) TimerEvent: {}
+[14.610458] (-) TimerEvent: {}
+[14.711287] (-) TimerEvent: {}
+[14.812133] (-) TimerEvent: {}
+[14.912911] (-) TimerEvent: {}
+[15.013647] (-) TimerEvent: {}
+[15.114463] (-) TimerEvent: {}
+[15.215260] (-) TimerEvent: {}
+[15.316110] (-) TimerEvent: {}
+[15.416911] (-) TimerEvent: {}
+[15.517569] (-) TimerEvent: {}
+[15.618391] (-) TimerEvent: {}
+[15.719155] (-) TimerEvent: {}
+[15.819824] (-) TimerEvent: {}
+[15.920642] (-) TimerEvent: {}
+[16.021308] (-) TimerEvent: {}
+[16.121954] (-) TimerEvent: {}
+[16.222781] (-) TimerEvent: {}
+[16.323581] (-) TimerEvent: {}
+[16.424293] (-) TimerEvent: {}
+[16.525130] (-) TimerEvent: {}
+[16.625933] (-) TimerEvent: {}
+[16.726671] (-) TimerEvent: {}
+[16.827481] (-) TimerEvent: {}
+[16.928267] (-) TimerEvent: {}
+[17.029093] (-) TimerEvent: {}
+[17.130038] (-) TimerEvent: {}
+[17.230831] (-) TimerEvent: {}
+[17.331618] (-) TimerEvent: {}
+[17.432521] (-) TimerEvent: {}
+[17.533462] (-) TimerEvent: {}
+[17.634455] (-) TimerEvent: {}
+[17.735252] (-) TimerEvent: {}
+[17.836129] (-) TimerEvent: {}
+[17.936965] (-) TimerEvent: {}
+[18.037792] (-) TimerEvent: {}
+[18.138627] (-) TimerEvent: {}
+[18.239315] (-) TimerEvent: {}
+[18.340180] (-) TimerEvent: {}
+[18.441035] (-) TimerEvent: {}
+[18.541864] (-) TimerEvent: {}
+[18.642728] (-) TimerEvent: {}
+[18.743535] (-) TimerEvent: {}
+[18.844243] (-) TimerEvent: {}
+[18.945072] (-) TimerEvent: {}
+[19.045909] (-) TimerEvent: {}
+[19.146732] (-) TimerEvent: {}
+[19.247594] (-) TimerEvent: {}
+[19.348423] (-) TimerEvent: {}
+[19.449285] (-) TimerEvent: {}
+[19.550134] (-) TimerEvent: {}
+[19.651053] (-) TimerEvent: {}
+[19.751900] (-) TimerEvent: {}
+[19.813902] (composition) StdoutLine: {'line': b'[ 66%] \x1b[32m\x1b[1mLinking CXX shared library liblistener_component.so\x1b[0m\n'}
+[19.852193] (-) TimerEvent: {}
+[19.953194] (-) TimerEvent: {}
+[20.054041] (-) TimerEvent: {}
+[20.154866] (-) TimerEvent: {}
+[20.255535] (-) TimerEvent: {}
+[20.356388] (-) TimerEvent: {}
+[20.457190] (-) TimerEvent: {}
+[20.557954] (-) TimerEvent: {}
+[20.658820] (-) TimerEvent: {}
+[20.759632] (-) TimerEvent: {}
+[20.807515] (composition) StdoutLine: {'line': b'[ 66%] Built target listener_component\n'}
+[20.838190] (composition) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target manual_composition\x1b[0m\n'}
+[20.859945] (-) TimerEvent: {}
+[20.879672] (composition) StdoutLine: {'line': b'[ 83%] \x1b[32mBuilding CXX object CMakeFiles/manual_composition.dir/src/manual_composition.cpp.o\x1b[0m\n'}
+[20.960059] (-) TimerEvent: {}
+[21.060751] (-) TimerEvent: {}
+[21.161415] (-) TimerEvent: {}
+[21.262086] (-) TimerEvent: {}
+[21.362755] (-) TimerEvent: {}
+[21.463413] (-) TimerEvent: {}
+[21.564098] (-) TimerEvent: {}
+[21.664781] (-) TimerEvent: {}
+[21.765447] (-) TimerEvent: {}
+[21.866126] (-) TimerEvent: {}
+[21.966813] (-) TimerEvent: {}
+[22.067493] (-) TimerEvent: {}
+[22.168209] (-) TimerEvent: {}
+[22.268900] (-) TimerEvent: {}
+[22.369595] (-) TimerEvent: {}
+[22.470257] (-) TimerEvent: {}
+[22.570947] (-) TimerEvent: {}
+[22.671635] (-) TimerEvent: {}
+[22.772596] (-) TimerEvent: {}
+[22.873297] (-) TimerEvent: {}
+[22.973977] (-) TimerEvent: {}
+[23.074655] (-) TimerEvent: {}
+[23.175345] (-) TimerEvent: {}
+[23.276037] (-) TimerEvent: {}
+[23.376744] (-) TimerEvent: {}
+[23.477436] (-) TimerEvent: {}
+[23.578134] (-) TimerEvent: {}
+[23.678830] (-) TimerEvent: {}
+[23.779522] (-) TimerEvent: {}
+[23.880226] (-) TimerEvent: {}
+[23.980907] (-) TimerEvent: {}
+[24.081592] (-) TimerEvent: {}
+[24.182258] (-) TimerEvent: {}
+[24.282939] (-) TimerEvent: {}
+[24.383603] (-) TimerEvent: {}
+[24.484261] (-) TimerEvent: {}
+[24.584930] (-) TimerEvent: {}
+[24.685592] (-) TimerEvent: {}
+[24.786282] (-) TimerEvent: {}
+[24.886954] (-) TimerEvent: {}
+[24.987632] (-) TimerEvent: {}
+[25.088316] (-) TimerEvent: {}
+[25.189030] (-) TimerEvent: {}
+[25.289741] (-) TimerEvent: {}
+[25.390437] (-) TimerEvent: {}
+[25.491102] (-) TimerEvent: {}
+[25.591780] (-) TimerEvent: {}
+[25.692486] (-) TimerEvent: {}
+[25.793170] (-) TimerEvent: {}
+[25.893837] (-) TimerEvent: {}
+[25.994531] (-) TimerEvent: {}
+[26.095218] (-) TimerEvent: {}
+[26.195921] (-) TimerEvent: {}
+[26.296633] (-) TimerEvent: {}
+[26.397318] (-) TimerEvent: {}
+[26.497989] (-) TimerEvent: {}
+[26.598671] (-) TimerEvent: {}
+[26.699377] (-) TimerEvent: {}
+[26.800056] (-) TimerEvent: {}
+[26.900781] (-) TimerEvent: {}
+[27.001449] (-) TimerEvent: {}
+[27.102101] (-) TimerEvent: {}
+[27.202765] (-) TimerEvent: {}
+[27.303421] (-) TimerEvent: {}
+[27.404107] (-) TimerEvent: {}
+[27.504750] (-) TimerEvent: {}
+[27.605398] (-) TimerEvent: {}
+[27.706056] (-) TimerEvent: {}
+[27.806719] (-) TimerEvent: {}
+[27.907380] (-) TimerEvent: {}
+[28.008034] (-) TimerEvent: {}
+[28.085059] (composition) StdoutLine: {'line': b'[100%] \x1b[32m\x1b[1mLinking CXX executable manual_composition\x1b[0m\n'}
+[28.108239] (-) TimerEvent: {}
+[28.208930] (-) TimerEvent: {}
+[28.309697] (-) TimerEvent: {}
+[28.410438] (-) TimerEvent: {}
+[28.511139] (-) TimerEvent: {}
+[28.611759] (-) TimerEvent: {}
+[28.653822] (composition) StdoutLine: {'line': b'[100%] Built target manual_composition\n'}
+[28.676644] (composition) CommandEnded: {'returncode': 0}
+[28.678399] (composition) JobProgress: {'identifier': 'composition', 'progress': 'install'}
+[28.695862] (composition) Command: {'cmd': ['/usr/bin/cmake', '--install', '/home/jonurce/Jon/ROS2Projects/idea_0_ws/build/composition'], 'cwd': '/home/jonurce/Jon/ROS2Projects/idea_0_ws/build/composition', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'jonurce'), ('XDG_SESSION_TYPE', 'x11'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/lib:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_renderer/lib:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_codecs/lib:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_msgs/lib:/opt/ros/humble/lib/aarch64-linux-gnu:/opt/ros/humble/opt/openeb_vendor/lib:/opt/ros/humble/lib'), ('HOME', '/home/jonurce'), ('DESKTOP_SESSION', 'ubuntu'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('DBUS_STARTER_BUS_TYPE', 'session'), ('SYSTEMD_EXEC_PID', '2242'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1001/bus,guid=40e0ea4c8b50685a86923f946889c82f'), ('COLORTERM', 'truecolor'), ('IM_CONFIG_PHASE', '1'), ('COLCON_PREFIX_PATH', '/home/jonurce/Jon/ROS2Projects/test_ws/install'), ('ROS_DISTRO', 'humble'), ('GTK_IM_MODULE', 'ibus'), ('LOGNAME', 'jonurce'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'jonurce'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '1'), ('WINDOWPATH', '2'), ('PATH', '/opt/ros/humble/opt/openeb_vendor/bin:/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin:/home/jonurce/.local/share/JetBrains/Toolbox/scripts'), ('SESSION_MANAGER', 'local/pandect:@/tmp/.ICE-unix/2242,unix/pandect:/tmp/.ICE-unix/2242'), ('XDG_MENU_PREFIX', 'gnome-'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/25259c6b_b830_4a90_9b44_624fd351a348'), ('XDG_RUNTIME_DIR', '/run/user/1001'), ('DISPLAY', ':1'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1001/gdm/Xauthority'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('GNOME_TERMINAL_SERVICE', ':1.102'), ('SSH_AGENT_LAUNCHER', 'gnome-keyring'), ('SSH_AUTH_SOCK', '/run/user/1001/keyring/ssh'), ('ROS_DOMAIN_ID', '0'), ('AMENT_PREFIX_PATH', '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_renderer:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_codecs:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_msgs:/opt/ros/humble'), ('SHELL', '/bin/bash'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('GPG_AGENT_INFO', '/run/user/1001/gnupg/S.gpg-agent:0:1'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/jonurce/Jon/ROS2Projects/idea_0_ws/build/composition'), ('LC_ALL', 'en_US.UTF-8'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('DBUS_STARTER_ADDRESS', 'unix:path=/run/user/1001/bus,guid=40e0ea4c8b50685a86923f946889c82f'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/share/gnome:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_msgs/local/lib/python3.10/dist-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('VTE_VERSION', '6800'), ('CMAKE_PREFIX_PATH', '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_renderer:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_codecs:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_msgs:/opt/ros/humble/opt/openeb_vendor:/opt/ros/humble')]), 'shell': False}
+[28.711893] (-) TimerEvent: {}
+[28.712457] (composition) StdoutLine: {'line': b'-- Install configuration: ""\n'}
+[28.712808] (composition) StdoutLine: {'line': b'-- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/environment/library_path.sh\n'}
+[28.712953] (composition) StdoutLine: {'line': b'-- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/environment/library_path.dsv\n'}
+[28.713124] (composition) StdoutLine: {'line': b'-- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/lib/libtalker_component.so\n'}
+[28.713252] (composition) StdoutLine: {'line': b'-- Installing: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/lib/liblistener_component.so\n'}
+[28.734317] (composition) StdoutLine: {'line': b'-- Set runtime path of "/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/lib/liblistener_component.so" to ""\n'}
+[28.734792] (composition) StdoutLine: {'line': b'-- Installing: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/lib/composition/manual_composition\n'}
+[28.735632] (composition) StdoutLine: {'line': b'-- Set runtime path of "/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/lib/composition/manual_composition" to ""\n'}
+[28.735833] (composition) StdoutLine: {'line': b'-- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/launch\n'}
+[28.736021] (composition) StdoutLine: {'line': b'-- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/launch/composition_demo.launch.py\n'}
+[28.736233] (composition) StdoutLine: {'line': b'-- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/ament_index/resource_index/package_run_dependencies/composition\n'}
+[28.736463] (composition) StdoutLine: {'line': b'-- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/ament_index/resource_index/parent_prefix_path/composition\n'}
+[28.736676] (composition) StdoutLine: {'line': b'-- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/environment/ament_prefix_path.sh\n'}
+[28.736837] (composition) StdoutLine: {'line': b'-- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/environment/ament_prefix_path.dsv\n'}
+[28.736960] (composition) StdoutLine: {'line': b'-- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/environment/path.sh\n'}
+[28.737138] (composition) StdoutLine: {'line': b'-- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/environment/path.dsv\n'}
+[28.737328] (composition) StdoutLine: {'line': b'-- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/local_setup.bash\n'}
+[28.737451] (composition) StdoutLine: {'line': b'-- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/local_setup.sh\n'}
+[28.737565] (composition) StdoutLine: {'line': b'-- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/local_setup.zsh\n'}
+[28.737676] (composition) StdoutLine: {'line': b'-- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/local_setup.dsv\n'}
+[28.737813] (composition) StdoutLine: {'line': b'-- Installing: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/package.dsv\n'}
+[28.737927] (composition) StdoutLine: {'line': b'-- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/ament_index/resource_index/packages/composition\n'}
+[28.738039] (composition) StdoutLine: {'line': b'-- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/ament_index/resource_index/rclcpp_components/composition\n'}
+[28.738148] (composition) StdoutLine: {'line': b'-- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/cmake/compositionConfig.cmake\n'}
+[28.738257] (composition) StdoutLine: {'line': b'-- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/cmake/compositionConfig-version.cmake\n'}
+[28.738366] (composition) StdoutLine: {'line': b'-- Up-to-date: /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/package.xml\n'}
+[28.741688] (composition) CommandEnded: {'returncode': 0}
+[28.809460] (composition) JobEnded: {'identifier': 'composition', 'rc': 0}
+[28.811266] (-) EventReactorShutdown: {}

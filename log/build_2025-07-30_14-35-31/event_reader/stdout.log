@@ -1,0 +1,36 @@
+running egg_info
+creating ../../build/event_reader/event_reader.egg-info
+writing ../../build/event_reader/event_reader.egg-info/PKG-INFO
+writing dependency_links to ../../build/event_reader/event_reader.egg-info/dependency_links.txt
+writing entry points to ../../build/event_reader/event_reader.egg-info/entry_points.txt
+writing requirements to ../../build/event_reader/event_reader.egg-info/requires.txt
+writing top-level names to ../../build/event_reader/event_reader.egg-info/top_level.txt
+writing manifest file '../../build/event_reader/event_reader.egg-info/SOURCES.txt'
+reading manifest file '../../build/event_reader/event_reader.egg-info/SOURCES.txt'
+adding license file 'LICENSE'
+writing manifest file '../../build/event_reader/event_reader.egg-info/SOURCES.txt'
+running build
+running build_py
+creating /home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_reader/build
+creating /home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_reader/build/lib
+creating /home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_reader/build/lib/event_reader
+copying event_reader/event_read.py -> /home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_reader/build/lib/event_reader
+copying event_reader/__init__.py -> /home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_reader/build/lib/event_reader
+running install
+running install_lib
+creating /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/lib/python3.10/site-packages/event_reader
+copying /home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_reader/build/lib/event_reader/event_read.py -> /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/lib/python3.10/site-packages/event_reader
+copying /home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_reader/build/lib/event_reader/__init__.py -> /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/lib/python3.10/site-packages/event_reader
+byte-compiling /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/lib/python3.10/site-packages/event_reader/event_read.py to event_read.cpython-310.pyc
+byte-compiling /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/lib/python3.10/site-packages/event_reader/__init__.py to __init__.cpython-310.pyc
+running install_data
+creating /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/share/ament_index
+creating /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/share/ament_index/resource_index
+creating /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/share/ament_index/resource_index/packages
+copying resource/event_reader -> /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/share/ament_index/resource_index/packages
+copying package.xml -> /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/share/event_reader
+running install_egg_info
+Copying ../../build/event_reader/event_reader.egg-info to /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/lib/python3.10/site-packages/event_reader-0.0.0-py3.10.egg-info
+running install_scripts
+Installing print_events script to /home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/lib/event_reader
+writing list of installed files to '/home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_reader/install.log'

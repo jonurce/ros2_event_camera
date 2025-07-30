@@ -1,0 +1,251 @@
+[0.212s] DEBUG:colcon:Command line arguments: ['/usr/bin/colcon', 'build']
+[0.212s] DEBUG:colcon:Parsed command line arguments: Namespace(log_base=None, log_level=None, verb_name='build', build_base='build', install_base='install', merge_install=False, symlink_install=False, test_result_base=None, continue_on_error=False, executor='parallel', parallel_workers=8, event_handlers=None, ignore_user_meta=False, metas=['./colcon.meta'], base_paths=['.'], packages_ignore=None, packages_ignore_regex=None, paths=None, packages_up_to=None, packages_up_to_regex=None, packages_above=None, packages_above_and_dependencies=None, packages_above_depth=None, packages_select_by_dep=None, packages_skip_by_dep=None, packages_skip_up_to=None, packages_select_build_failed=False, packages_skip_build_finished=False, packages_select_test_failures=False, packages_skip_test_passed=False, packages_select=None, packages_skip=None, packages_select_regex=None, packages_skip_regex=None, packages_start=None, packages_end=None, allow_overriding=[], cmake_args=None, cmake_target=None, cmake_target_skip_unavailable=False, cmake_clean_cache=False, cmake_clean_first=False, cmake_force_configure=False, ament_cmake_args=None, catkin_cmake_args=None, catkin_skip_building_tests=False, mixin_files=None, mixin=None, verb_parser=<colcon_mixin.mixin.mixin_argument.MixinArgumentDecorator object at 0xffff9cf50ee0>, verb_extension=<colcon_core.verb.build.BuildVerb object at 0xffff9cf50970>, main=<bound method BuildVerb.main of <colcon_core.verb.build.BuildVerb object at 0xffff9cf50970>>, mixin_verb=('build',))
+[0.524s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) check parameters
+[0.524s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) check parameters
+[0.524s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) check parameters
+[0.524s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) check parameters
+[0.524s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) discover
+[0.524s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) discover
+[0.525s] INFO:colcon.colcon_core.package_discovery:Crawling recursively for packages in '/home/jonurce/Jon/ROS2Projects/idea_0_ws'
+[0.525s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ignore', 'ignore_ament_install']
+[0.525s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore'
+[0.525s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore_ament_install'
+[0.525s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_pkg']
+[0.525s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_pkg'
+[0.525s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_meta']
+[0.526s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_meta'
+[0.526s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ros']
+[0.526s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ros'
+[0.548s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['cmake', 'python']
+[0.548s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'cmake'
+[0.548s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python'
+[0.548s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['python_setup_py']
+[0.548s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python_setup_py'
+[0.549s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extensions ['ignore', 'ignore_ament_install']
+[0.549s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extension 'ignore'
+[0.549s] Level 1:colcon.colcon_core.package_identification:_identify(build) ignored
+[0.549s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extensions ['ignore', 'ignore_ament_install']
+[0.549s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extension 'ignore'
+[0.550s] Level 1:colcon.colcon_core.package_identification:_identify(install) ignored
+[0.550s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extensions ['ignore', 'ignore_ament_install']
+[0.550s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extension 'ignore'
+[0.550s] Level 1:colcon.colcon_core.package_identification:_identify(log) ignored
+[0.550s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['ignore', 'ignore_ament_install']
+[0.550s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ignore'
+[0.550s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ignore_ament_install'
+[0.551s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['colcon_pkg']
+[0.551s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'colcon_pkg'
+[0.551s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['colcon_meta']
+[0.551s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'colcon_meta'
+[0.551s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['ros']
+[0.551s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ros'
+[0.551s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['cmake', 'python']
+[0.551s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'cmake'
+[0.551s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'python'
+[0.551s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['python_setup_py']
+[0.551s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'python_setup_py'
+[0.552s] Level 1:colcon.colcon_core.package_identification:_identify(src/composition) by extensions ['ignore', 'ignore_ament_install']
+[0.552s] Level 1:colcon.colcon_core.package_identification:_identify(src/composition) by extension 'ignore'
+[0.552s] Level 1:colcon.colcon_core.package_identification:_identify(src/composition) by extension 'ignore_ament_install'
+[0.552s] Level 1:colcon.colcon_core.package_identification:_identify(src/composition) by extensions ['colcon_pkg']
+[0.552s] Level 1:colcon.colcon_core.package_identification:_identify(src/composition) by extension 'colcon_pkg'
+[0.552s] Level 1:colcon.colcon_core.package_identification:_identify(src/composition) by extensions ['colcon_meta']
+[0.552s] Level 1:colcon.colcon_core.package_identification:_identify(src/composition) by extension 'colcon_meta'
+[0.552s] Level 1:colcon.colcon_core.package_identification:_identify(src/composition) by extensions ['ros']
+[0.552s] Level 1:colcon.colcon_core.package_identification:_identify(src/composition) by extension 'ros'
+[0.557s] DEBUG:colcon.colcon_core.package_identification:Package 'src/composition' with type 'ros.ament_cmake' and name 'composition'
+[0.558s] Level 1:colcon.colcon_core.package_identification:_identify(src/event_camera_codecs) by extensions ['ignore', 'ignore_ament_install']
+[0.558s] Level 1:colcon.colcon_core.package_identification:_identify(src/event_camera_codecs) by extension 'ignore'
+[0.558s] Level 1:colcon.colcon_core.package_identification:_identify(src/event_camera_codecs) by extension 'ignore_ament_install'
+[0.558s] Level 1:colcon.colcon_core.package_identification:_identify(src/event_camera_codecs) by extensions ['colcon_pkg']
+[0.558s] Level 1:colcon.colcon_core.package_identification:_identify(src/event_camera_codecs) by extension 'colcon_pkg'
+[0.558s] Level 1:colcon.colcon_core.package_identification:_identify(src/event_camera_codecs) by extensions ['colcon_meta']
+[0.559s] Level 1:colcon.colcon_core.package_identification:_identify(src/event_camera_codecs) by extension 'colcon_meta'
+[0.559s] Level 1:colcon.colcon_core.package_identification:_identify(src/event_camera_codecs) by extensions ['ros']
+[0.559s] Level 1:colcon.colcon_core.package_identification:_identify(src/event_camera_codecs) by extension 'ros'
+[0.571s] DEBUG:colcon.colcon_core.package_identification:Package 'src/event_camera_codecs' with type 'ros.ament_cmake' and name 'event_camera_codecs'
+[0.571s] Level 1:colcon.colcon_core.package_identification:_identify(src/event_reader) by extensions ['ignore', 'ignore_ament_install']
+[0.572s] Level 1:colcon.colcon_core.package_identification:_identify(src/event_reader) by extension 'ignore'
+[0.572s] Level 1:colcon.colcon_core.package_identification:_identify(src/event_reader) by extension 'ignore_ament_install'
+[0.572s] Level 1:colcon.colcon_core.package_identification:_identify(src/event_reader) by extensions ['colcon_pkg']
+[0.572s] Level 1:colcon.colcon_core.package_identification:_identify(src/event_reader) by extension 'colcon_pkg'
+[0.572s] Level 1:colcon.colcon_core.package_identification:_identify(src/event_reader) by extensions ['colcon_meta']
+[0.572s] Level 1:colcon.colcon_core.package_identification:_identify(src/event_reader) by extension 'colcon_meta'
+[0.572s] Level 1:colcon.colcon_core.package_identification:_identify(src/event_reader) by extensions ['ros']
+[0.572s] Level 1:colcon.colcon_core.package_identification:_identify(src/event_reader) by extension 'ros'
+[0.574s] DEBUG:colcon.colcon_core.package_identification:Package 'src/event_reader' with type 'ros.ament_python' and name 'event_reader'
+[0.574s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) using defaults
+[0.574s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) discover
+[0.574s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) using defaults
+[0.574s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) discover
+[0.574s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) using defaults
+[0.641s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) check parameters
+[0.641s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) discover
+[0.644s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 3 installed packages in /home/jonurce/Jon/ROS2Projects/test_ws/install
+[0.646s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 244 installed packages in /opt/ros/humble
+[0.649s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) using defaults
+[0.712s] WARNING:colcon.colcon_core.package_selection:Some selected packages are already built in one or more underlay workspaces:
+	'event_camera_codecs' is in: /home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_codecs, /opt/ros/humble
+If a package in a merged underlay workspace is overridden and it installs headers, then all packages in the overlay must sort their include directories by workspace order. Failure to do so may result in build failures or undefined behavior at run time.
+If the overridden package is used by another package in any underlay, then the overriding package in the overlay must be API and ABI compatible or undefined behavior at run time may occur.
+
+If you understand the risks and want to override a package anyways, add the following to the command line:
+	--allow-overriding event_camera_codecs
+
+This may be promoted to an error in a future release of colcon-override-check.
+[0.714s] Level 5:colcon.colcon_core.verb:set package 'event_camera_codecs' build argument 'cmake_args' from command line to 'None'
+[0.714s] Level 5:colcon.colcon_core.verb:set package 'event_camera_codecs' build argument 'cmake_target' from command line to 'None'
+[0.714s] Level 5:colcon.colcon_core.verb:set package 'event_camera_codecs' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.714s] Level 5:colcon.colcon_core.verb:set package 'event_camera_codecs' build argument 'cmake_clean_cache' from command line to 'False'
+[0.714s] Level 5:colcon.colcon_core.verb:set package 'event_camera_codecs' build argument 'cmake_clean_first' from command line to 'False'
+[0.714s] Level 5:colcon.colcon_core.verb:set package 'event_camera_codecs' build argument 'cmake_force_configure' from command line to 'False'
+[0.714s] Level 5:colcon.colcon_core.verb:set package 'event_camera_codecs' build argument 'ament_cmake_args' from command line to 'None'
+[0.714s] Level 5:colcon.colcon_core.verb:set package 'event_camera_codecs' build argument 'catkin_cmake_args' from command line to 'None'
+[0.715s] Level 5:colcon.colcon_core.verb:set package 'event_camera_codecs' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.715s] DEBUG:colcon.colcon_core.verb:Building package 'event_camera_codecs' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_camera_codecs', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs', 'merge_install': False, 'path': '/home/jonurce/Jon/ROS2Projects/idea_0_ws/src/event_camera_codecs', 'symlink_install': False, 'test_result_base': None}
+[0.715s] Level 5:colcon.colcon_core.verb:set package 'event_reader' build argument 'cmake_args' from command line to 'None'
+[0.715s] Level 5:colcon.colcon_core.verb:set package 'event_reader' build argument 'cmake_target' from command line to 'None'
+[0.715s] Level 5:colcon.colcon_core.verb:set package 'event_reader' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.715s] Level 5:colcon.colcon_core.verb:set package 'event_reader' build argument 'cmake_clean_cache' from command line to 'False'
+[0.716s] Level 5:colcon.colcon_core.verb:set package 'event_reader' build argument 'cmake_clean_first' from command line to 'False'
+[0.716s] Level 5:colcon.colcon_core.verb:set package 'event_reader' build argument 'cmake_force_configure' from command line to 'False'
+[0.716s] Level 5:colcon.colcon_core.verb:set package 'event_reader' build argument 'ament_cmake_args' from command line to 'None'
+[0.716s] Level 5:colcon.colcon_core.verb:set package 'event_reader' build argument 'catkin_cmake_args' from command line to 'None'
+[0.716s] Level 5:colcon.colcon_core.verb:set package 'event_reader' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.716s] DEBUG:colcon.colcon_core.verb:Building package 'event_reader' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_reader', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader', 'merge_install': False, 'path': '/home/jonurce/Jon/ROS2Projects/idea_0_ws/src/event_reader', 'symlink_install': False, 'test_result_base': None}
+[0.716s] Level 5:colcon.colcon_core.verb:set package 'composition' build argument 'cmake_args' from command line to 'None'
+[0.716s] Level 5:colcon.colcon_core.verb:set package 'composition' build argument 'cmake_target' from command line to 'None'
+[0.716s] Level 5:colcon.colcon_core.verb:set package 'composition' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.716s] Level 5:colcon.colcon_core.verb:set package 'composition' build argument 'cmake_clean_cache' from command line to 'False'
+[0.717s] Level 5:colcon.colcon_core.verb:set package 'composition' build argument 'cmake_clean_first' from command line to 'False'
+[0.717s] Level 5:colcon.colcon_core.verb:set package 'composition' build argument 'cmake_force_configure' from command line to 'False'
+[0.717s] Level 5:colcon.colcon_core.verb:set package 'composition' build argument 'ament_cmake_args' from command line to 'None'
+[0.717s] Level 5:colcon.colcon_core.verb:set package 'composition' build argument 'catkin_cmake_args' from command line to 'None'
+[0.717s] Level 5:colcon.colcon_core.verb:set package 'composition' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.717s] DEBUG:colcon.colcon_core.verb:Building package 'composition' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/jonurce/Jon/ROS2Projects/idea_0_ws/build/composition', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition', 'merge_install': False, 'path': '/home/jonurce/Jon/ROS2Projects/idea_0_ws/src/composition', 'symlink_install': False, 'test_result_base': None}
+[0.717s] INFO:colcon.colcon_core.executor:Executing jobs using 'parallel' executor
+[0.719s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete
+[0.720s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/jonurce/Jon/ROS2Projects/idea_0_ws/src/event_camera_codecs' with build type 'ament_cmake'
+[0.720s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/jonurce/Jon/ROS2Projects/idea_0_ws/src/event_camera_codecs'
+[0.724s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_core.shell.bat': Not used on non-Windows systems
+[0.724s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.724s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.731s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/jonurce/Jon/ROS2Projects/idea_0_ws/src/event_reader' with build type 'ament_python'
+[0.731s] Level 1:colcon.colcon_core.shell:create_environment_hook('event_reader', 'ament_prefix_path')
+[0.732s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/share/event_reader/hook/ament_prefix_path.ps1'
+[0.734s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/share/event_reader/hook/ament_prefix_path.dsv'
+[0.735s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/share/event_reader/hook/ament_prefix_path.sh'
+[0.736s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.736s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.750s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_camera_codecs': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake /home/jonurce/Jon/ROS2Projects/idea_0_ws/src/event_camera_codecs -DCMAKE_INSTALL_PREFIX=/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs
+[1.257s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/jonurce/Jon/ROS2Projects/idea_0_ws/src/event_reader'
+[1.258s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[1.258s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[1.950s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/jonurce/Jon/ROS2Projects/idea_0_ws/src/event_reader': PYTHONPATH=/home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_reader/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/event_reader build --build-base /home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_reader/build install --record /home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_reader/install.log --single-version-externally-managed install_data
+[2.318s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_camera_codecs' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake /home/jonurce/Jon/ROS2Projects/idea_0_ws/src/event_camera_codecs -DCMAKE_INSTALL_PREFIX=/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs
+[2.322s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_camera_codecs': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_camera_codecs -- -j8 -l8
+[2.529s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/jonurce/Jon/ROS2Projects/idea_0_ws/src/event_reader' returned '0': PYTHONPATH=/home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_reader/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/event_reader build --build-base /home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_reader/build install --record /home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_reader/install.log --single-version-externally-managed install_data
+[2.535s] Level 1:colcon.colcon_core.environment:checking '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader' for CMake module files
+[2.536s] Level 1:colcon.colcon_core.environment:checking '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader' for CMake config files
+[2.539s] Level 1:colcon.colcon_core.environment:checking '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/lib'
+[2.539s] Level 1:colcon.colcon_core.environment:checking '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/bin'
+[2.539s] Level 1:colcon.colcon_core.environment:checking '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/lib/pkgconfig/event_reader.pc'
+[2.540s] Level 1:colcon.colcon_core.environment:checking '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/lib/python3.10/site-packages'
+[2.540s] Level 1:colcon.colcon_core.shell:create_environment_hook('event_reader', 'pythonpath')
+[2.541s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/share/event_reader/hook/pythonpath.ps1'
+[2.542s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/share/event_reader/hook/pythonpath.dsv'
+[2.543s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/share/event_reader/hook/pythonpath.sh'
+[2.544s] Level 1:colcon.colcon_core.environment:checking '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/bin'
+[2.544s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(event_reader)
+[2.545s] INFO:colcon.colcon_core.shell:Creating package script '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/share/event_reader/package.ps1'
+[2.547s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/share/event_reader/package.dsv'
+[2.549s] INFO:colcon.colcon_core.shell:Creating package script '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/share/event_reader/package.sh'
+[2.550s] INFO:colcon.colcon_core.shell:Creating package script '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/share/event_reader/package.bash'
+[2.552s] INFO:colcon.colcon_core.shell:Creating package script '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/share/event_reader/package.zsh'
+[2.553s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_reader/share/colcon-core/packages/event_reader)
+[5.778s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_camera_codecs' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_camera_codecs -- -j8 -l8
+[5.803s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_camera_codecs': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_camera_codecs
+[5.841s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(event_camera_codecs)
+[5.842s] Level 1:colcon.colcon_core.environment:checking '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs' for CMake module files
+[5.842s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_camera_codecs' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/jonurce/Jon/ROS2Projects/idea_0_ws/build/event_camera_codecs
+[5.843s] Level 1:colcon.colcon_core.environment:checking '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs' for CMake config files
+[5.843s] Level 1:colcon.colcon_core.shell:create_environment_hook('event_camera_codecs', 'cmake_prefix_path')
+[5.844s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/hook/cmake_prefix_path.ps1'
+[5.845s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/hook/cmake_prefix_path.dsv'
+[5.845s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/hook/cmake_prefix_path.sh'
+[5.846s] Level 1:colcon.colcon_core.environment:checking '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/lib'
+[5.847s] Level 1:colcon.colcon_core.shell:create_environment_hook('event_camera_codecs', 'ld_library_path_lib')
+[5.847s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/hook/ld_library_path_lib.ps1'
+[5.848s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/hook/ld_library_path_lib.dsv'
+[5.849s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/hook/ld_library_path_lib.sh'
+[5.850s] Level 1:colcon.colcon_core.environment:checking '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/bin'
+[5.851s] Level 1:colcon.colcon_core.environment:checking '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/lib/pkgconfig/event_camera_codecs.pc'
+[5.852s] Level 1:colcon.colcon_core.environment:checking '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/lib/python3.10/site-packages'
+[5.852s] Level 1:colcon.colcon_core.environment:checking '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/bin'
+[5.853s] INFO:colcon.colcon_core.shell:Creating package script '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/package.ps1'
+[5.855s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/package.dsv'
+[5.856s] INFO:colcon.colcon_core.shell:Creating package script '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/package.sh'
+[5.857s] INFO:colcon.colcon_core.shell:Creating package script '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/package.bash'
+[5.857s] INFO:colcon.colcon_core.shell:Creating package script '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/package.zsh'
+[5.858s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/colcon-core/packages/event_camera_codecs)
+[5.859s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(event_camera_codecs)
+[5.860s] Level 1:colcon.colcon_core.environment:checking '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs' for CMake module files
+[5.862s] Level 1:colcon.colcon_core.environment:checking '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs' for CMake config files
+[5.863s] Level 1:colcon.colcon_core.shell:create_environment_hook('event_camera_codecs', 'cmake_prefix_path')
+[5.864s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/hook/cmake_prefix_path.ps1'
+[5.865s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/hook/cmake_prefix_path.dsv'
+[5.867s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/hook/cmake_prefix_path.sh'
+[5.869s] Level 1:colcon.colcon_core.environment:checking '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/lib'
+[5.869s] Level 1:colcon.colcon_core.shell:create_environment_hook('event_camera_codecs', 'ld_library_path_lib')
+[5.870s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/hook/ld_library_path_lib.ps1'
+[5.871s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/hook/ld_library_path_lib.dsv'
+[5.873s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/hook/ld_library_path_lib.sh'
+[5.873s] Level 1:colcon.colcon_core.environment:checking '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/bin'
+[5.874s] Level 1:colcon.colcon_core.environment:checking '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/lib/pkgconfig/event_camera_codecs.pc'
+[5.874s] Level 1:colcon.colcon_core.environment:checking '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/lib/python3.10/site-packages'
+[5.874s] Level 1:colcon.colcon_core.environment:checking '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/bin'
+[5.875s] INFO:colcon.colcon_core.shell:Creating package script '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/package.ps1'
+[5.876s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/package.dsv'
+[5.877s] INFO:colcon.colcon_core.shell:Creating package script '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/package.sh'
+[5.878s] INFO:colcon.colcon_core.shell:Creating package script '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/package.bash'
+[5.879s] INFO:colcon.colcon_core.shell:Creating package script '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/event_camera_codecs/package.zsh'
+[5.880s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/share/colcon-core/packages/event_camera_codecs)
+[5.881s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/jonurce/Jon/ROS2Projects/idea_0_ws/src/composition' with build type 'ament_cmake'
+[5.882s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/jonurce/Jon/ROS2Projects/idea_0_ws/src/composition'
+[5.882s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[5.882s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[5.911s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/jonurce/Jon/ROS2Projects/idea_0_ws/build/composition': AMENT_PREFIX_PATH=/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_renderer:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_codecs:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_msgs:/opt/ros/humble/opt/openeb_vendor:/opt/ros/humble LD_LIBRARY_PATH=/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/lib:${LD_LIBRARY_PATH} /usr/bin/cmake /home/jonurce/Jon/ROS2Projects/idea_0_ws/src/composition -DCMAKE_INSTALL_PREFIX=/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition
+[8.687s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/jonurce/Jon/ROS2Projects/idea_0_ws/build/composition' returned '0': AMENT_PREFIX_PATH=/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_renderer:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_codecs:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_msgs:/opt/ros/humble/opt/openeb_vendor:/opt/ros/humble LD_LIBRARY_PATH=/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/lib:${LD_LIBRARY_PATH} /usr/bin/cmake /home/jonurce/Jon/ROS2Projects/idea_0_ws/src/composition -DCMAKE_INSTALL_PREFIX=/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition
+[8.691s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/jonurce/Jon/ROS2Projects/idea_0_ws/build/composition': AMENT_PREFIX_PATH=/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_renderer:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_codecs:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_msgs:/opt/ros/humble/opt/openeb_vendor:/opt/ros/humble LD_LIBRARY_PATH=/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --build /home/jonurce/Jon/ROS2Projects/idea_0_ws/build/composition -- -j8 -l8
+[21.298s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/jonurce/Jon/ROS2Projects/idea_0_ws/build/composition' returned '2': AMENT_PREFIX_PATH=/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_renderer:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_codecs:/home/jonurce/Jon/ROS2Projects/test_ws/install/event_camera_msgs:/opt/ros/humble/opt/openeb_vendor:/opt/ros/humble LD_LIBRARY_PATH=/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/event_camera_codecs/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --build /home/jonurce/Jon/ROS2Projects/idea_0_ws/build/composition -- -j8 -l8
+[21.300s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(composition)
+[21.300s] Level 1:colcon.colcon_core.environment:checking '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition' for CMake module files
+[21.302s] Level 1:colcon.colcon_core.environment:checking '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition' for CMake config files
+[21.302s] Level 1:colcon.colcon_core.environment:checking '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/bin'
+[21.303s] Level 1:colcon.colcon_core.environment:checking '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/lib/pkgconfig/composition.pc'
+[21.303s] Level 1:colcon.colcon_core.environment:checking '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/lib/python3.10/site-packages'
+[21.303s] Level 1:colcon.colcon_core.environment:checking '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/bin'
+[21.304s] INFO:colcon.colcon_core.shell:Creating package script '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/package.ps1'
+[21.306s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/package.dsv'
+[21.307s] INFO:colcon.colcon_core.shell:Creating package script '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/package.sh'
+[21.308s] INFO:colcon.colcon_core.shell:Creating package script '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/package.bash'
+[21.308s] INFO:colcon.colcon_core.shell:Creating package script '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/composition/package.zsh'
+[21.309s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/composition/share/colcon-core/packages/composition)
+[21.320s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:closing loop
+[21.321s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:loop closed
+[21.321s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete finished with '2'
+[21.321s] DEBUG:colcon.colcon_core.event_reactor:joining thread
+[21.338s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.terminal_notifier': Not used on non-Darwin systems
+[21.339s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.win32': Not used on non-Windows systems
+[21.339s] INFO:colcon.colcon_notification.desktop_notification:Sending desktop notification using 'notify2'
+[21.373s] DEBUG:colcon.colcon_core.event_reactor:joined thread
+[21.375s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/local_setup.ps1'
+[21.378s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/_local_setup_util_ps1.py'
+[21.382s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/setup.ps1'
+[21.385s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/local_setup.sh'
+[21.387s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/_local_setup_util_sh.py'
+[21.389s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/setup.sh'
+[21.393s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/local_setup.bash'
+[21.395s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/setup.bash'
+[21.400s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/local_setup.zsh'
+[21.401s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/jonurce/Jon/ROS2Projects/idea_0_ws/install/setup.zsh'
