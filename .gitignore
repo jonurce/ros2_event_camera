@@ -4,3 +4,6 @@ log/
 *.pyc
 .venv/
 .idea/
+venv/
+akida_dw_edma/
+downloads/
