@@ -1,4 +1,3 @@
-# Hi
 
 #%% [0 - Capture Images]
 import cv2
