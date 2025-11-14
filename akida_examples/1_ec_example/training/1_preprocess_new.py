@@ -1,29 +1,20 @@
-# 1_preprocess.py — GPU-ACCELERATED, .pt + .txt OUTPUT
-# → For each label: save voxel.pt (10,640,480) + label.txt (x y state)
-# → Uses last 100ms events before label
-# → Saves to: preprocessed/train/REC_ID/sample_XXX.pt + .label.txt
-
+# 1_preprocess.py — COMPACT: ONE .pt + ONE .txt PER RECORDING
 import h5py
 import numpy as np
 import torch
 from pathlib import Path
 import re
 from tqdm import tqdm
-import time
 
 # ========================================
 # CONFIG
 # ========================================
-T_BINS = 10
-T_LABELED = 10000 # Labeled at 100Hz = 0.01s = 10000us
-WINDOW_US = T_BINS * T_LABELED 
+T_LABELED = 10000
 H, W = 480, 640
 DATA_ROOT = Path("/home/jetson/Jon/IndustrialProject/akida_examples/1_ec_example/training/event-based-eye-tracking-cvpr-2025/3ET+ dataset/event_data")
 OUTPUT_ROOT = Path("/home/jetson/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed")
 OUTPUT_ROOT.mkdir(exist_ok=True)
-
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-# DEVICE = "cpu"
 print(f"Using device: {DEVICE}")
 
 # ========================================
@@ -41,127 +32,108 @@ def load_labels(txt_path):
     return np.array(labels, dtype=np.int32)
 
 # ========================================
-# 2. GPU-ACCELERATED VOXEL GRID (TORCH)
+# 2. GPU VOXEL
 # ========================================
 def events_to_voxel_gpu(events, t_start, t_end):
-    """
-    Input: events (N,) with .t, .x, .y, .p
-    Output: torch.Tensor (10, 640, 480) on GPU → +1 / -1
-    """
+    if len(events) == 0:
+        return torch.zeros((W, H), device=DEVICE)
+
     t = torch.from_numpy(events['t'].astype(np.float64)).to(DEVICE)
     x = torch.from_numpy(events['x']).to(DEVICE, dtype=torch.long)
     y = torch.from_numpy(events['y']).to(DEVICE, dtype=torch.long)
     p = torch.from_numpy(events['p']).to(DEVICE, dtype=torch.long)
 
-    # Clamp time to [t_start, t_end] - Double check, as input already comes clamped
     mask = (t >= t_start) & (t <= t_end)
     if not mask.any():
-        return torch.zeros((T_BINS, W, H), dtype=torch.float32)
+        return torch.zeros((W, H), device=DEVICE)
 
     t, x, y, p = t[mask], x[mask], y[mask], p[mask]
 
-    # Validate coordinates
     valid = (x >= 0) & (x < W) & (y >= 0) & (y < H)
-    if not valid.all():
-        t, x, y, p = t[valid], x[valid], y[valid], p[valid]
-
+    t, x, y, p = t[valid], x[valid], y[valid], p[valid]
     if len(t) == 0:
-        return torch.zeros((T_BINS, W, H), dtype=torch.float32)
+        return torch.zeros((W, H), device=DEVICE)
 
-    # Time → bin index
-    t_norm = T_BINS * (t - t_start) / (t_end - t_start + 1e-6)
-    t_norm = torch.clamp(t_norm, 0, T_BINS - 1)
-    bin_idx = t_norm.floor().long() # (N,)
+    pol = torch.where(p == 1, 1.0, -1.0)
 
-    # Polarity
-    pol = torch.where(p == 1, 1.0, -1.0).to(DEVICE) # (N,)
-
-    # Flatten spatial index: bin_idx * (H*W) + y * W + x
-    flat_idx = bin_idx * (H * W) + x * H + y # (N,)
-
-    # Create flat voxel: (T_BINS, H*W)
-    flat_voxel = torch.zeros(1, T_BINS * H * W, device=DEVICE, dtype=torch.float32)
-
-    flat_idx = flat_idx.unsqueeze(0)  # (1, N)
-    pol = pol.unsqueeze(0)            # (1, N)
-
-    # Scatter: src must be same size as index
+    flat_idx = y * W + x
+    flat_voxel = torch.zeros(1, H * W, device=DEVICE, dtype=torch.float32)
+    flat_idx = flat_idx.unsqueeze(0)
+    pol = pol.unsqueeze(0)
     flat_voxel.scatter_add_(1, flat_idx, pol)
 
-    return flat_voxel.view(T_BINS, W, H)#.cpu() # (10,640,480)
+    return flat_voxel.view(W, H)
 
 # ========================================
-# 3. PREPROCESS ONE RECORDING
+# 3. PREPROCESS ONE RECORDING → ONE FILE
 # ========================================
 def preprocess_recording(folder, split):
     rec_id = folder.name
     h5_file = folder / f"{rec_id}.h5"
     txt_file = folder / "label.txt"
-
     if not h5_file.exists() or not txt_file.exists():
         return 0
 
-    # Output dir
     out_dir = OUTPUT_ROOT / split / rec_id
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # Load data
     with h5py.File(h5_file, 'r') as f:
         events = f['events'][()]
-
     labels = load_labels(txt_file)
     if len(labels) == 0:
         return 0
 
-    # Sort events by time
     sort_idx = np.argsort(events['t'])
     events = events[sort_idx]
     t_events = events['t']
 
-    # Label times (100Hz)
     t_labels_us = (np.arange(len(labels)) + 1) * T_LABELED
 
-    sample_count = 0
+    # Collect all voxels
+    voxel_list = []
+    valid_labels = []
+
     for i in range(len(labels)):
         t_label = t_labels_us[i]
-        t_start = max(0, t_label - WINDOW_US)
+        t_start = max(0, t_label - T_LABELED)
         t_end = t_label
 
-        # Binary search (indexes of limit times)
         left = np.searchsorted(t_events, t_start, side='left')
         right = np.searchsorted(t_events, t_end, side='right')
         if left >= right:
             continue
 
         window_events = events[left:right]
+        voxel = events_to_voxel_gpu(window_events, t_start, t_end)
+        voxel_list.append(voxel.cpu())  # collect on CPU
+        valid_labels.append([t_label, labels[i][0], labels[i][1], labels[i][2]])
 
-        # GPU voxel
-        voxel_tensor = events_to_voxel_gpu(window_events, t_start, t_end)  # (10,640,480)
+    if len(voxel_list) == 0:
+        return 0
 
-        # Save .pt (tensor) + .label.txt
-        sample_name = f"sample_{sample_count:06d}"
-        pt_path = out_dir / f"{sample_name}.pt"
-        txt_path = out_dir / f"{sample_name}.label.txt"
+    # Stack all voxels: [N, 640, 480]
+    voxel_stack = torch.stack(voxel_list)  # [N, W, H]
 
-        torch.save(voxel_tensor, pt_path)
+    # Save
+    pt_path = out_dir / "voxels.pt"
+    txt_path = out_dir / "labels.txt"
 
-        with open(txt_path, 'w') as f:
-            x, y, state = labels[i]
-            f.write(f"{x} {y} {state}\n")
+    torch.save(voxel_stack, pt_path)
 
-        sample_count += 1
+    with open(txt_path, 'w') as f:
+        for time, x, y, state in valid_labels:
+            f.write(f"{time} {x} {y} {state}\n")
 
-    return sample_count
+    return len(voxel_list)
 
 # ========================================
 # 4. MAIN
 # ========================================
 if __name__ == "__main__":
-    print("STARTING GPU-ACCELERATED PREPROCESSING")
-    print(f"Input:  {DATA_ROOT}")
+    print("STARTING COMPACT PREPROCESSING (1 .pt + 1 .txt per recording)")
+    print(f"Input: {DATA_ROOT}")
     print(f"Output: {OUTPUT_ROOT}")
-    print(f"Window: {WINDOW_US:.0f}us → {T_BINS} bins")
-    print(f"Format: .pt ({T_BINS},{W},{H}) + .label.txt")
+    print(f"Format: voxels.pt [N,640,480] + labels.txt [N×4]")
 
     total_samples = 0
     for split in ['train', 'test']:
@@ -169,20 +141,14 @@ if __name__ == "__main__":
         if not split_path.exists():
             print(f"ERROR: {split_path} not found!")
             continue
-
         folders = sorted([f for f in split_path.iterdir() if f.is_dir()])
         print(f"\nPROCESSING {split.upper()} — {len(folders)} recordings")
-
         for folder in tqdm(folders, desc=split):
             n = preprocess_recording(folder, split)
             total_samples += n
             if n > 0:
-                tqdm.write(f"  {folder.name}: {n} samples")
-
-        print(f"{split.upper()} DONE: {total_samples} total samples")
-
-    print("\nPREPROCESSING COMPLETE!")
+                tqdm.write(f" {folder.name}: {n} samples → voxels.pt")
+    print(f"\nPREPROCESSING COMPLETE! Total samples: {total_samples}")
     print("Files created:")
-    print(" preprocessed/SPLIT/REC_ID/sample_XXX.pt")
-    print(" preprocessed/SPLIT/REC_ID/sample_XXX.label.txt")
-    print("\nNext: python 2_train.py (on-the-fly from .pt + .txt)")
+    print(" preprocessed/train/REC_ID/voxels.pt")
+    print(" preprocessed/train/REC_ID/labels.txt")

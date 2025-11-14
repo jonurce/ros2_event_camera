@@ -10,3 +10,4 @@ akida_dw_edma/
 *.h5
 *.onnx
 *label.txt
+*preprocessed/
