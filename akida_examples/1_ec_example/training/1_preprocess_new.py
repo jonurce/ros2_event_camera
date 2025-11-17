@@ -54,10 +54,17 @@ def events_to_voxel_gpu(events, t_start, t_end):
     if len(t) == 0:
         return torch.zeros((W, H), device=DEVICE)
 
-    pol = torch.where(p == 1, 1.0, -1.0)
+    # Positive events are p=0 -> +1 ; negative events are p=1 -> -1
+    # pol = torch.where(p == 1, -1.0, 1.0)
+    pol = torch.where(p == 1, torch.tensor(-1, dtype=torch.int8, device=DEVICE),
+                         torch.tensor( 1, dtype=torch.int8, device=DEVICE))
 
-    flat_idx = y * W + x
-    flat_voxel = torch.zeros(1, H * W, device=DEVICE, dtype=torch.float32)
+    # Flatten spatial index: y * W + x -> This works for flat_voxel.view(H, W)
+    # Flatten spatial index: x * H + y -> This works for flat_voxel.view(W, H) -> USE THIS
+    flat_idx = x * H + y
+
+    # flat_voxel = torch.zeros(1, H * W, device=DEVICE, dtype=torch.float32)
+    flat_voxel = torch.zeros(1, H * W, device=DEVICE, dtype=torch.int8)
     flat_idx = flat_idx.unsqueeze(0)
     pol = pol.unsqueeze(0)
     flat_voxel.scatter_add_(1, flat_idx, pol)

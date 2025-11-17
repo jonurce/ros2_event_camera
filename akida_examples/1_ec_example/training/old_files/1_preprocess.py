@@ -76,7 +76,8 @@ def events_to_voxel_gpu(events, t_start, t_end):
     # Polarity
     pol = torch.where(p == 1, 1.0, -1.0).to(DEVICE) # (N,)
 
-    # Flatten spatial index: bin_idx * (H*W) + y * W + x
+    # Flatten spatial index: bin_idx * (H*W) + y * W + x -> This works for flat_voxel.view(T_BINS, H, W)
+    # Flatten spatial index: bin_idx * (H*W) + x * H + y -> This works for flat_voxel.view(T_BINS, W, H) -> USE THIS
     flat_idx = bin_idx * (H * W) + x * H + y # (N,)
 
     # Create flat voxel: (T_BINS, H*W)
