@@ -19,7 +19,7 @@ from model_2 import EyeTennSt
 # ============================================================
 # CONFIGURATION
 # ============================================================
-BATCH_SIZE = 16
+BATCH_SIZE = 8
 NUM_EPOCHS = 150
 LEARNING_RATE = 0.002
 WEIGHT_DECAY = 0.005
@@ -155,10 +155,10 @@ def main():
 
         pbar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{NUM_EPOCHS} [Train]")
         for batch in pbar:
-            x = batch['input'].to(DEVICE)  # model expects [B, T, W, H] int8
+            x = batch['input'].to(DEVICE, non_blocking=True)  # model expects [B, T, W, H] int8
 
-            gaze_target = batch['gaze'].to(DEVICE)
-            state_target = batch['state'].to(DEVICE)
+            gaze_target = batch['gaze'].to(DEVICE, non_blocking=True)
+            state_target = batch['state'].to(DEVICE, non_blocking=True)
 
             optimizer.zero_grad()
             gaze_pred, state_logit = model(x)
@@ -188,9 +188,9 @@ def main():
 
             with torch.no_grad():
                 for batch in val_loader:
-                    x = batch['input'].to(DEVICE) # model expects [B, T, W, H] int8
-                    gaze_target = batch['gaze'].to(DEVICE)
-                    state_target = batch['state'].to(DEVICE)
+                    x = batch['input'].to(DEVICE, non_blocking=True) # model expects [B, T, W, H] int8
+                    gaze_target = batch['gaze'].to(DEVICE, non_blocking=True)
+                    state_target = batch['state'].to(DEVICE, non_blocking=True)
 
                     gaze_pred, state_logit = model(x)
                     loss = criterion_gaze(gaze_pred, gaze_target) + 10.0 * criterion_state(state_logit, state_target)

@@ -1,3 +1,5 @@
+
+# Check pytorch:
 import torch
 import numpy as np
 
@@ -13,3 +15,8 @@ a = torch.randn(128, 128).cpu()
 b = torch.randn(128, 128).cpu()
 c = a @ b
 print("MATMUL OK:", c.sum().item())
+
+
+# Check tenns_modules:
+from tenns_modules import SpatioTemporalBlock
+print('\nSuccess with tenns_modules!')
