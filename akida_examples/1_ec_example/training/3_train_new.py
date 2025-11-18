@@ -19,13 +19,20 @@ from model_2 import EyeTennSt
 # ============================================================
 # CONFIGURATION
 # ============================================================
-BATCH_SIZE = 8
+BATCH_SIZE = 4
 NUM_EPOCHS = 150
 LEARNING_RATE = 0.002
 WEIGHT_DECAY = 0.005
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-DATA_ROOT = Path("/home/jetson/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed")
-LOG_DIR = Path("/home/jetson/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/try_1")
+
+# Jetson paths
+# DATA_ROOT = Path("/home/jetson/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed")
+# LOG_DIR = Path("/home/jetson/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/try_1")
+
+# Alienware paths
+DATA_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed")
+LOG_DIR = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/try_1")
+
 LOG_DIR.mkdir(exist_ok=True)
 LOG_FILE = LOG_DIR / f"training_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
 
@@ -224,10 +231,10 @@ def main():
             # Save best model
             if val_loss_total < best_val_loss:
                 best_val_loss = val_loss_total
-                torch.save(model.state_dict(), "best.pth")
+                torch.save(model.state_dict(), f"{LOG_DIR}/best.pth")
                 print("New best model saved!")
 
-    torch.save(model.state_dict(), "final.pth")
+    torch.save(model.state_dict(), f"{LOG_DIR}/final.pth")
     # writer.close()
     print("Training complete! Best model: best.pth")
 

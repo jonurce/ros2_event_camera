@@ -8,8 +8,15 @@ from matplotlib.colors import ListedColormap
 # Config
 SPLIT = "train"
 REC= "10_1"
-PT_FILE = Path(f"/home/jetson/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed/{SPLIT}/{REC}/voxels.pt")
-LABEL_FILE = Path(f"/home/jetson/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed/{SPLIT}/{REC}/labels.txt")
+
+# Jetson paths
+# PT_FILE = Path(f"/home/jetson/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed/{SPLIT}/{REC}/voxels.pt")
+# LABEL_FILE = Path(f"/home/jetson/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed/{SPLIT}/{REC}/labels.txt")
+
+# Alienware paths
+PT_FILE = Path(f"/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed/{SPLIT}/{REC}/voxels.pt")
+LABEL_FILE = Path(f"/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed/{SPLIT}/{REC}/labels.txt")
+
 H, W = 480, 640
 N_BINS = 5
 T_LABELED = 10000 # 100Hz = 0.01s = 10000 us

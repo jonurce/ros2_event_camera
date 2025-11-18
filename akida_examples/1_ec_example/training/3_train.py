@@ -25,7 +25,11 @@ BATCH_SIZE = 4
 EPOCHS = 20
 LR = 1e-3
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
 DATA_DIR = Path("/home/jetson/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed")
+
+
 MODEL_DIR = Path("models")
 MODEL_DIR.mkdir(exist_ok=True)
 

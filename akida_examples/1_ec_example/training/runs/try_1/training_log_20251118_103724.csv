@@ -1,1 +1,0 @@
-epoch,train_loss,val_loss,val_gaze_mae_px,val_state_acc_%,lr
