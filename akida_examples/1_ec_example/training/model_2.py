@@ -70,7 +70,7 @@ class EyeTennSt(nn.Module):
         """
         # Add channel dimension: [B, 10, 640, 480] → [B, 1, 10, 640, 480]
         if input.dim() == 4:
-            input = input.unsqueeze(1).float()  # → [B, 1, T, H, W]
+            input = input.unsqueeze(1).float()  # → [B, 1, T, H, W] float32
 
         # Backbone: spatio-temporal feature extraction
         # [B, 1, 10, 640, 480] -> [B, 256, 10, 20, 20]
