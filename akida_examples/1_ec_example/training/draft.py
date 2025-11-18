@@ -17,6 +17,6 @@ c = a @ b
 print("MATMUL OK:", c.sum().item())
 
 
-# Check tenns_modules:
+# Check tenns_modules: hi
 from tenns_modules import SpatioTemporalBlock
 print('\nSuccess with tenns_modules!')
