@@ -27,11 +27,12 @@ os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 # ============================================================
 # CONFIGURATION — NOW OPTIMIZED FOR SPEED
 # ============================================================
-BATCH_SIZE = 48   # ↑↑↑ NOW SAFE: 48 thanks to float16 + pre-stacked!
+BATCH_SIZE = 24   # ↑↑↑ NOW SAFE: 24 thanks to float16 + pre-stacked!
 NUM_EPOCHS = 150
 LEARNING_RATE = 0.002
 WEIGHT_DECAY = 0.005
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+# DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Alienware paths
 DATA_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_fast")
@@ -62,7 +63,11 @@ class EyeTrackingDataset(Dataset):
             if not voxels_path.exists() or not labels_path.exists():
                 continue
 
-            voxels = torch.load(voxels_path, map_location="cpu")  # [N, 10, 640, 480] float16
+            # Trying to load the entire 260 GB into RAM at once
+            # voxels = torch.load(voxels_path, map_location="cpu")  # [N, 10, 640, 480] float16
+
+            # This memory-maps the file → loads 0 GB into RAM, only reads needed samples on-the-fly
+            voxels = torch.load(voxels_path, map_location="cpu", mmap=True, weights_only=True)  # [N, 10, 640, 480] float16
             labels = np.loadtxt(labels_path, dtype=np.int32)      # [N, 4]: t, x, y, state
 
             self.recordings.append({
@@ -131,11 +136,18 @@ def main():
                             num_workers=16, persistent_workers=True, prefetch_factor=4,
                             pin_memory=True)
 
+    # Model
+    torch.cuda.empty_cache()
     model = EyeTennSt(t_kernel_size=5, s_kernel_size=3, n_depthwise_layers=6).to(DEVICE)
+
+    # DATA PARALLEL for multi-GPU setups
+    if torch.cuda.device_count() > 1:
+        print(f"Using {torch.cuda.device_count()} GPUs with DataParallel...")
+        model = torch.nn.DataParallel(model)
 
     # TORCH.COMPILE — still great, now even more stable
     print("Compiling model with torch.compile()...")
-    model = torch.compile(model, mode="default")
+    model = torch.compile(model, mode="reduce-overhead")
 
     criterion_gaze = nn.MSELoss()
     criterion_state = nn.BCEWithLogitsLoss()
