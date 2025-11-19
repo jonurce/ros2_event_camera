@@ -11,4 +11,5 @@ akida_dw_edma/
 *.onnx
 *label.txt
 *preprocessed/
+*preprocessed_fast/
 *runs/

@@ -19,8 +19,8 @@ H, W = 480, 640
 # Alienware paths
 DATA_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/event-based-eye-tracking-cvpr-2025/3ET+ dataset/event_data")
 OUTPUT_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed")
-
 OUTPUT_ROOT.mkdir(exist_ok=True)
+
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {DEVICE}")
 
@@ -86,7 +86,6 @@ def preprocess_recording(folder, split):
     h5_file = folder / f"{rec_id}.h5"
     txt_file = folder / "label.txt"
 
-
     if not h5_file.exists() or not txt_file.exists():
         return 0
 
@@ -95,6 +94,7 @@ def preprocess_recording(folder, split):
 
     with h5py.File(h5_file, 'r') as f:
         events = f['events'][()]
+        
     labels = load_labels(txt_file)
     if len(labels) == 0:
         return 0

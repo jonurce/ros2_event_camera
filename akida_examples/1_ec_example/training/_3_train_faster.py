@@ -11,7 +11,7 @@ from datetime import datetime
 from pathlib import Path
 import numpy as np
 from tqdm import tqdm
-from model_2 import EyeTennSt
+from _2_model_int8 import EyeTennSt
 
 # TF32 can spike power on Ampere/Turing cards
 torch.backends.cuda.matmul.allow_tf32 = False
@@ -19,10 +19,14 @@ torch.backends.cuda.matmul.allow_tf32 = False
 # Benchmark mode can cause huge power spikes at start
 torch.backends.cudnn.benchmark = False
 
+#
+import os
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+
 # ============================================================
 # CONFIGURATION — NOW OPTIMIZED FOR SPEED
 # ============================================================
-BATCH_SIZE = 64   # was 4 → now 64 thanks to AMP!
+BATCH_SIZE = 16   # was 4 → now 16 thanks to AMP!
 NUM_EPOCHS = 150
 LEARNING_RATE = 0.002
 WEIGHT_DECAY = 0.005
@@ -30,7 +34,7 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Alienware paths
 DATA_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed")
-LOG_DIR = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_2")
+LOG_DIR = Path(f"/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_2_batch_{BATCH_SIZE}_epochs_{NUM_EPOCHS}")
 LOG_DIR.mkdir(exist_ok=True)
 LOG_FILE = LOG_DIR / f"training_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
 
@@ -46,6 +50,7 @@ class EyeTrackingDataset(Dataset):
         self.recordings = [] # list of recordings (recording_dir, voxels, labels, num_frames_in_recording)
         self.samples = [] # list of samples (recording_index, frame_index)
         split_path = DATA_ROOT / split
+
         for rec_dir in sorted(split_path.iterdir()):
             if not rec_dir.is_dir():
                 continue
@@ -53,6 +58,7 @@ class EyeTrackingDataset(Dataset):
             labels_path = rec_dir / "labels.txt"
             if not voxels_path.exists() or not labels_path.exists():
                 continue
+
             voxels = torch.load(voxels_path, map_location="cpu")  # [N, 640, 480] int8
             labels = np.loadtxt(labels_path, dtype=np.int32) # [N, 4]: t, x, y, state
             self.recordings.append({
@@ -151,6 +157,7 @@ def main():
     print(f"Logging to: {LOG_FILE}")
     best_val_loss = float('inf')
 
+    # Training loop
     for epoch in range(NUM_EPOCHS):
         model.train()
         train_loss_total = 0.0
