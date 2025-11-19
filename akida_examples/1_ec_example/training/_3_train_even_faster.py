@@ -27,7 +27,7 @@ os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 # ============================================================
 # CONFIGURATION — NOW OPTIMIZED FOR SPEED
 # ============================================================
-BATCH_SIZE = 64   # ↑↑↑ NOW SAFE: 64 thanks to float16 + pre-stacked!
+BATCH_SIZE = 48   # ↑↑↑ NOW SAFE: 48 thanks to float16 + pre-stacked!
 NUM_EPOCHS = 150
 LEARNING_RATE = 0.002
 WEIGHT_DECAY = 0.005

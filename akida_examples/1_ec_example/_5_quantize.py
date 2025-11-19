@@ -138,15 +138,26 @@ print("="*60)
 
 import tensorflow as tf
 from tensorflow.keras.metrics import MeanAbsoluteError, BinaryAccuracy
+import os
 
 # Re-use the same fast test dataset
 test_dataset = EyeTrackingDataset(split="test")
 test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False, num_workers=8, pin_memory=True)
 
 # ----------------------------------
+# Helper: get file size in human-readable format
+# ----------------------------------
+def format_size(bytes_size):
+    for unit in ['B', 'KB', 'MB', 'GB']:
+        if bytes_size < 1024:
+            return f"{bytes_size:.2f} {unit}"
+        bytes_size /= 1024
+    return f"{bytes_size:.2f} GB"
+
+# ----------------------------------
 # Helper: evaluate any quantizeml/Keras model and return metrics
 # ----------------------------------
-def evaluate_quantized_model(model_keras, model_name: str):
+def evaluate_quantized_model(model_keras, model_name: str, model_path: str = None):
     mae_metric = MeanAbsoluteError()
     bin_acc    = BinaryAccuracy(threshold=0.5)
 
@@ -170,11 +181,15 @@ def evaluate_quantized_model(model_keras, model_name: str):
     gaze_mae   = mae_metric.result().numpy()
     blink_acc  = bin_acc.result().numpy() * 100.0
 
+    size_bytes = os.path.getsize(model_path) if model_path and os.path.exists(model_path) else 0
+
     return {
         "name": model_name,
         "mae": gaze_mae,
         "acc": blink_acc,
-        "samples": total_samples
+        "samples": total_samples,
+        "size_bytes": size_bytes,
+        "size_str": format_size(size_bytes) if size_bytes > 0 else "N/A"
     }
 
 # ----------------------------------
@@ -207,12 +222,14 @@ with torch.no_grad():
 
 float_results["mae"] = mae_metric.result().numpy()
 float_results["acc"] = bin_acc.result().numpy() * 100.0
+float_results["size_str"] = format_size(float_results["size_bytes"])
 
 # ----------------------------------
 # 2. Evaluate quantized models
+
 # ----------------------------------
-int8_results = evaluate_quantized_model(model_q8, "INT8")
-int4_results = evaluate_quantized_model(model_q4, "INT4")
+int8_results = evaluate_quantized_model(model_q8, "INT8", INT8_QUANTIZED_MODEL_PATH)
+int4_results = evaluate_quantized_model(model_q4, "INT4", INT4_QUANTIZED_MODEL_PATH)
 
 # ----------------------------------
 # 3. Print beautiful real table
@@ -220,27 +237,32 @@ int4_results = evaluate_quantized_model(model_q4, "INT4")
 results = [float_results, int8_results, int4_results]
 
 print("\n" + "="*80)
-print("FINAL QUANTIZATION ACCURACY COMPARISON")
+print("FINAL QUANTIZATION RESULTS (Accuracy + Model Size)")
 print("="*80)
-print(f"{'Model':<18} {'Gaze MAE (px)':>14} {'Δ MAE':>10} {'Blink Acc (%)':>16} {'Δ Acc':>10}")
+print(f"{'Model':<14} {'Gaze MAE (px)':>14} {'Δ MAE':>10} {'Blink Acc':>14} {'Δ Acc':>10} {'Size':>12} {'Reduction':>12}")
 print("-"*80)
 
 for i, r in enumerate(results):
     if i == 0:
         delta_mae = 0.0
         delta_acc = 0.0
+        reduction = "100.0%"
     else:
         delta_mae = r["mae"] - results[0]["mae"]
         delta_acc = r["acc"] - results[0]["acc"]
+        reduction = f"{(1 - r['size_bytes']/results[0]['size_bytes'])*100:5.1f}%"
 
-    print(f"{r['name']:<18} "
+    print(f"{r['name']:<14} "
           f"{r['mae']:14.3f} "
           f"{delta_mae:+8.3f} "
           f"{r['acc']:14.2f}% "
-          f"{delta_acc:+8.2f} pp")
+          f"{delta_acc:+8.2f} pp "
+          f"{r['size_str']:>12} "
+          f"{reduction:>10}")
 
 print("-"*80)
 print(f"Total test samples: {results[0]['samples']:,}")
+print(f"Reference (Float16): {float_results['size_str']}")
 print("="*80)
 
 # ----------------------------------
@@ -252,10 +274,12 @@ with open(summary_path, "w") as f:
     f.write("="*50 + "\n")
     for r in results:
         if r is float_results:
-            f.write(f"{r['name']}:  Gaze MAE = {r['mae']:.3f} px | Blink Acc = {r['acc']:.2f}%\n")
+            f.write(f"{r['name']:12} | MAE: {r['mae']:.3f} px | Acc: {r['acc']:.2f}% | Size: {r['size_str']}\n")
         else:
             delta_mae = r["mae"] - results[0]["mae"]
             delta_acc = r["acc"] - results[0]["acc"]
-            f.write(f"{r['name']}:  Gaze MAE = {r['mae']:.3f} px ({delta_mae:+.3f}) | "
-                    f"Blink Acc = {r['acc']:.2f}% ({delta_acc:+.2f} pp)\n")
+            reduction = (1 - r['size_bytes']/results[0]['size_bytes'])*100
+            f.write(f"{r['name']:12} | MAE: {r['mae']:.3f} px (+{delta_mae:.3f}) | "
+                    f"Acc: {r['acc']:.2f}% ({delta_acc:+.2f} pp) | "
+                    f"Size: {r['size_str']} (-{reduction:.1f}%)\n")
 print(f"Report saved to: {summary_path}")
