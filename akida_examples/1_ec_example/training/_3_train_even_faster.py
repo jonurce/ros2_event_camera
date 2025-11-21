@@ -27,8 +27,8 @@ os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 # ============================================================
 # CONFIGURATION — NOW OPTIMIZED FOR SPEED
 # ============================================================
-BATCH_SIZE = 24   # ↑↑↑ NOW SAFE: 24 thanks to float16 + pre-stacked!
-NUM_EPOCHS = 150
+BATCH_SIZE = 16   # ↑↑↑ NOW SAFE: 16 thanks to float16 + pre-stacked!
+NUM_EPOCHS = 200
 LEARNING_RATE = 0.002
 WEIGHT_DECAY = 0.005
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -153,7 +153,8 @@ def main():
     criterion_state = nn.BCEWithLogitsLoss()
     optimizer = optim.AdamW(model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
 
-    # OneCycleLR – super fast convergence
+    # OneC
+    # ycleLR – super fast convergence
     total_steps = len(train_loader) * NUM_EPOCHS
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=LEARNING_RATE,
                                               total_steps=total_steps, pct_start=0.3,
@@ -187,7 +188,7 @@ def main():
                 gaze_pred, state_logit = model(x)
                 loss_gaze = criterion_gaze(gaze_pred, gaze_target)
                 loss_state = criterion_state(state_logit, state_target)
-                loss = loss_gaze + 10.0 * loss_state
+                loss = loss_gaze + 2.0 * loss_state
 
             scaler.scale(loss).backward()
             scaler.step(optimizer)
@@ -214,7 +215,7 @@ def main():
 
                     with torch.cuda.amp.autocast():
                         gaze_pred, state_logit = model(x)
-                        loss = criterion_gaze(gaze_pred, gaze_target) + 10.0 * criterion_state(state_logit, state_target)
+                        loss = criterion_gaze(gaze_pred, gaze_target) + 2.0 * criterion_state(state_logit, state_target)
 
                     val_loss_total += loss.item()
                     val_gaze_mae += torch.mean(torch.abs(gaze_pred - gaze_target)).item()

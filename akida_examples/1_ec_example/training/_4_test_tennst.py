@@ -5,7 +5,7 @@
 
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader
+from torch.utils.data import Dataset, DataLoader
 from pathlib import Path
 import numpy as np
 from tqdm import tqdm
@@ -20,7 +20,7 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 DATA_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_fast")
 
 # Path to your trained model (best.pth or final.pth)
-MODEL_PATH = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_3_f16_batch_64_epochs_150/best.pth")
+MODEL_PATH = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_3_f16_batch_24_epochs_130/best.pth")
 
 BATCH_SIZE = 64   # large batch = fast inference
 print(f"Testing on {DEVICE}")
@@ -87,7 +87,14 @@ def main():
                              num_workers=8, pin_memory=True)
 
     # Load model
+    torch.cuda.empty_cache()
     model = EyeTennSt(t_kernel_size=5, s_kernel_size=3, n_depthwise_layers=6).to(DEVICE)
+
+    # DATA PARALLEL for multi-GPU setups
+    if torch.cuda.device_count() > 1:
+        print(f"Using {torch.cuda.device_count()} GPUs with DataParallel...")
+        model = torch.nn.DataParallel(model)
+
     model.load_state_dict(torch.load(MODEL_PATH, map_location=DEVICE))
     model.eval()
     print("Model loaded and set to eval mode")
