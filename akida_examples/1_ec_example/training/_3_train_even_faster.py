@@ -153,11 +153,10 @@ def main():
     criterion_state = nn.BCEWithLogitsLoss()
     optimizer = optim.AdamW(model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
 
-    # OneC
-    # ycleLR – super fast convergence
+    # OneCycleLR – super fast convergence
     total_steps = len(train_loader) * NUM_EPOCHS
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=LEARNING_RATE,
-                                              total_steps=total_steps, pct_start=0.3,
+                                              total_steps=total_steps, pct_start=0.2,
                                               anneal_strategy='cos')
 
     # MIXED PRECISION — HUGE memory + speed win

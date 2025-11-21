@@ -11,6 +11,16 @@ import numpy as np
 from tqdm import tqdm
 from _2_model_f16 import EyeTennSt   # ← your model with .float() removed
 
+# TF32 can spike power on Ampere/Turing cards
+torch.backends.cuda.matmul.allow_tf32 = False
+
+# Benchmark mode can cause huge power spikes at start
+torch.backends.cudnn.benchmark = False
+
+#
+import os
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+
 # ============================================================
 # CONFIG — UPDATE THESE PATHS
 # ============================================================
@@ -20,7 +30,7 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 DATA_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_fast")
 
 # Path to your trained model (best.pth or final.pth)
-MODEL_PATH = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_3_f16_batch_24_epochs_130/best.pth")
+MODEL_PATH = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_3_f16_batch_16_epochs_65/best.pth")
 
 BATCH_SIZE = 64   # large batch = fast inference
 print(f"Testing on {DEVICE}")
@@ -31,21 +41,28 @@ print(f"Dataset: {DATA_ROOT}")
 # SAME DATASET AS TRAINING — BUT TEST SPLIT ONLY
 # ============================================================
 class EyeTrackingDataset(Dataset):
-    def __init__(self, split="test"):
+    def __init__(self, split="train"):
+        self.split = split
+        # list of recordings (voxels, labels, num_frames_in_recording)
         self.recordings = []
-        self.samples = []
+        # list of samples (recording_index, frame_index)
+        self.samples = [] 
         split_path = DATA_ROOT / split
 
         for rec_dir in sorted(split_path.iterdir()):
             if not rec_dir.is_dir():
                 continue
-            voxels_path = rec_dir / "voxels.pt"      # [N, 10, 640, 480] float16
+            voxels_path = rec_dir / "voxels.pt"  # [N, 10, 640, 480] float16
             labels_path = rec_dir / "labels.txt"
             if not voxels_path.exists() or not labels_path.exists():
                 continue
 
-            voxels = torch.load(voxels_path, map_location="cpu")  # [N, 10, 640, 480]
-            labels = np.loadtxt(labels_path, dtype=np.int32)      # [N, 4]
+            # Trying to load the entire 260 GB into RAM at once
+            # voxels = torch.load(voxels_path, map_location="cpu")  # [N, 10, 640, 480] float16
+
+            # This memory-maps the file → loads 0 GB into RAM, only reads needed samples on-the-fly
+            voxels = torch.load(voxels_path, map_location="cpu", mmap=True, weights_only=True)  # [N, 10, 640, 480] float16
+            labels = np.loadtxt(labels_path, dtype=np.int32)      # [N, 4]: t, x, y, state
 
             self.recordings.append({
                 'voxels': voxels,
@@ -53,12 +70,12 @@ class EyeTrackingDataset(Dataset):
                 'num_frames': len(voxels)
             })
 
-        # Build index
+        # Build flat index
         for rec_idx, item in enumerate(self.recordings):
             for i in range(item['num_frames']):
                 self.samples.append((rec_idx, i))
 
-        print(f"TEST dataset: {len(self.samples)} samples from {len(self.recordings)} recordings")
+        print(f"{split.upper()} dataset: {len(self.samples)} samples from {len(self.recordings)} recordings")
 
     def __len__(self):
         return len(self.samples)
@@ -67,13 +84,17 @@ class EyeTrackingDataset(Dataset):
         rec_idx, frame_idx = self.samples[idx]
         item = self.recordings[rec_idx]
 
-        window = item['voxels'][frame_idx]                    # [10, 640, 480] float16
-        x, y, state = item['labels'][frame_idx, 1:4]          # x, y, state
+        # Direct indexing
+        window = item['voxels'][frame_idx]    # [10, 640, 480] float16
+
+        x, y, state = item['labels'][frame_idx, 1], item['labels'][frame_idx, 2], item['labels'][frame_idx, 3]
+        gaze_target = torch.tensor([x, y], dtype=torch.float32)
+        state_target = torch.tensor(state, dtype=torch.float32)
 
         return {
-            'input': window,
-            'gaze': torch.tensor([x, y], dtype=torch.float32),
-            'state': torch.tensor(state, dtype=torch.float32)
+            'input': window,   # [10, 640, 480] float16
+            'gaze': gaze_target,
+            'state': state_target
         }
 
 # ============================================================
@@ -94,6 +115,10 @@ def main():
     if torch.cuda.device_count() > 1:
         print(f"Using {torch.cuda.device_count()} GPUs with DataParallel...")
         model = torch.nn.DataParallel(model)
+
+    # TORCH.COMPILE — still great, now even more stable
+    print("Compiling model with torch.compile()...")
+    model = torch.compile(model, mode="reduce-overhead")
 
     model.load_state_dict(torch.load(MODEL_PATH, map_location=DEVICE))
     model.eval()
