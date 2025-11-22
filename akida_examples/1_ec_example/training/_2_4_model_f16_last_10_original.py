@@ -6,6 +6,7 @@
 import torch
 import torch.nn as nn
 from tenns_modules import SpatioTemporalBlock
+from torchinfo import summary
 
 # ===================================================================
 # Our TennSt Model — 10 time bins → (x,y) + state
@@ -45,7 +46,7 @@ class EyeTennSt(nn.Module):
             )
 
         # Final feature extractor [1, 256, 10, 20, 20] → [1, 256, 10, 20, 20]
-        self.head_conv = SpatioTemporalBlock(
+        self.pre_head = SpatioTemporalBlock(
             in_channels=channels[-1],
             med_channels=channels[-1],
             out_channels=channels[-1],
@@ -54,15 +55,12 @@ class EyeTennSt(nn.Module):
             t_depthwise=False,
             s_depthwise=False
         )
-
-        # Global average pooling over space and time [1, 256, 10, 20, 20] → [1, 256, 1, 1, 1]
-        self.global_pool = nn.AdaptiveAvgPool3d(1)
-
+  
         # Two heads: gaze and state
-        # [1, 256] → [1, 2]
-        self.fc_gaze  = nn.Linear(channels[-1], 2)  # (x, y)
-        # [1, 256] → [1, 1]
-        self.fc_state = nn.Linear(channels[-1], 1)  # binary logit
+        # [1, 256, 1, 1, 1] → [1, 2]
+        self.gaze_head  = nn.Conv3d(channels[-1], 2, 1)  # (x, y)
+        # [1, 256, 1, 1, 1] → [1, 1]
+        self.state_head = nn.Conv3d(channels[-1], 1, 1)  # binary logit
 
     def forward(self, input):
         """
@@ -70,44 +68,54 @@ class EyeTennSt(nn.Module):
         """
         # Add channel dimension: [B, 10, 640, 480] → [B, 1, 10, 640, 480]
         if input.dim() == 4:
-            input = input.unsqueeze(1)  # → [B, 1, T, H, W]
+            input = input.unsqueeze(1).float()  # → [B, 1, T, H, W]
 
         # Backbone: spatio-temporal feature extraction
         # [B, 1, 10, 640, 480] -> [B, 256, 10, 20, 20]
         input = self.backbone(input)
         # [B, 256, 10, 20, 20] -> [B, 256, 10, 20, 20]
-        input = self.head_conv(input)
-
-        # Global pooling [1, 256, 10, 20, 20] → [1, 256, 1, 1, 1] → [B, 256]
-        input = self.global_pool(input).flatten(1)
+        input = self.pre_head(input)        
 
         # Predictions
-        # [B, 256] -> [B, 2]
-        gaze  = self.fc_gaze(input) 
-        # [B, 256] -> [B, 2]  
-        state = self.fc_state(input) 
+        # [B, 256, 10, 20, 20] -> [B, 2, 1, 1, 1]
+        gaze  = self.gaze_head(input) 
+        # [B, 256, 10, 20, 20] -> [B, 2, 1, 1, 1]  
+        state = self.state_head(input) 
 
-        return gaze, state.squeeze(1)
+        return gaze, state
 
 
 # ===================================================================
 # Quick test
 # ===================================================================
+DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+torch.cuda.empty_cache()
 if __name__ == "__main__":
     model = EyeTennSt(
         t_kernel_size=5,
         s_kernel_size=3,
         n_depthwise_layers=4
-    )
+    ).to(DEVICE)
 
-    # Simulate one batch of your data
-    dummy_input = torch.randint(-10, 11, (4, 10, 640, 480), dtype=torch.int8)  # B=4
+    # DATA PARALLEL for multi-GPU setups
+    if torch.cuda.device_count() > 1:
+        print(f"Using {torch.cuda.device_count()} GPUs with DataParallel...")
+        model = torch.nn.DataParallel(model)
+
+    # TORCH.COMPILE — still great, now even more stable
+    print("Compiling model with torch.compile()...")
+    model = torch.compile(model, mode="reduce-overhead")
+
+    model = model.float()
+
+    # Simulate one batch of your data B=4
+    # dummy_input = torch.randn((4, 10, 640, 480), dtype=torch.float16)
+    dummy_input = torch.randn((4, 10, 80, 60), dtype=torch.float16)
 
     gaze_pred, state_pred = model(dummy_input)
-    print(f"Input:  {dummy_input.shape} (int8)")
-    print(f"Gaze:   {gaze_pred.shape} → {gaze_pred}")
-    print(f"State:  {state_pred.shape} → {state_pred}")
+    print(f"Input:  {dummy_input.shape} (float)")
+    print(f"Gaze:   {gaze_pred.shape}")
+    print(f"State:  {state_pred.shape}")
 
     # Model summary
-    from torchinfo import summary
-    summary(model, input_size=(1, 10, 640, 480), device="cpu")
+    summary(model, input_size=(1, 10, 640, 480), device="cuda")

@@ -209,7 +209,8 @@ with torch.no_grad():
         gaze_true = batch['gaze'].to(DEVICE)
         state_true = batch['state'].to(DEVICE)
 
-        with torch.cuda.amp.autocast():
+        # with torch.cuda.amp.autocast():
+        with torch.amp.autocast('cuda'):
             gaze_pred, state_logit = pytorch_model(x)
 
         # Gaze MAE

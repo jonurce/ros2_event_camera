@@ -9,7 +9,8 @@ from torch.utils.data import Dataset, DataLoader
 from pathlib import Path
 import numpy as np
 from tqdm import tqdm
-from _2_model_f16 import EyeTennSt   # ← your model with .float() removed
+from _2_3_model_f16_last_10_gradual import EyeTennSt  
+from _3_3_train_fast_dataset_10 import EyeTrackingDataset
 
 # TF32 can spike power on Ampere/Turing cards
 torch.backends.cuda.matmul.allow_tf32 = False
@@ -24,78 +25,18 @@ os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 # ============================================================
 # CONFIG — UPDATE THESE PATHS
 # ============================================================
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # CHANGE: Point to your new fast dataset
 DATA_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_fast")
 
 # Path to your trained model (best.pth or final.pth)
-MODEL_PATH = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_3_f16_batch_16_epochs_65/best.pth")
+MODEL_PATH = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_3_f16_batch_24_epochs_130/best.pth")
 
 BATCH_SIZE = 64   # large batch = fast inference
 print(f"Testing on {DEVICE}")
 print(f"Model: {MODEL_PATH.name}")
 print(f"Dataset: {DATA_ROOT}")
-
-# ============================================================
-# SAME DATASET AS TRAINING — BUT TEST SPLIT ONLY
-# ============================================================
-class EyeTrackingDataset(Dataset):
-    def __init__(self, split="train"):
-        self.split = split
-        # list of recordings (voxels, labels, num_frames_in_recording)
-        self.recordings = []
-        # list of samples (recording_index, frame_index)
-        self.samples = [] 
-        split_path = DATA_ROOT / split
-
-        for rec_dir in sorted(split_path.iterdir()):
-            if not rec_dir.is_dir():
-                continue
-            voxels_path = rec_dir / "voxels.pt"  # [N, 10, 640, 480] float16
-            labels_path = rec_dir / "labels.txt"
-            if not voxels_path.exists() or not labels_path.exists():
-                continue
-
-            # Trying to load the entire 260 GB into RAM at once
-            # voxels = torch.load(voxels_path, map_location="cpu")  # [N, 10, 640, 480] float16
-
-            # This memory-maps the file → loads 0 GB into RAM, only reads needed samples on-the-fly
-            voxels = torch.load(voxels_path, map_location="cpu", mmap=True, weights_only=True)  # [N, 10, 640, 480] float16
-            labels = np.loadtxt(labels_path, dtype=np.int32)      # [N, 4]: t, x, y, state
-
-            self.recordings.append({
-                'voxels': voxels,
-                'labels': labels,
-                'num_frames': len(voxels)
-            })
-
-        # Build flat index
-        for rec_idx, item in enumerate(self.recordings):
-            for i in range(item['num_frames']):
-                self.samples.append((rec_idx, i))
-
-        print(f"{split.upper()} dataset: {len(self.samples)} samples from {len(self.recordings)} recordings")
-
-    def __len__(self):
-        return len(self.samples)
-
-    def __getitem__(self, idx):
-        rec_idx, frame_idx = self.samples[idx]
-        item = self.recordings[rec_idx]
-
-        # Direct indexing
-        window = item['voxels'][frame_idx]    # [10, 640, 480] float16
-
-        x, y, state = item['labels'][frame_idx, 1], item['labels'][frame_idx, 2], item['labels'][frame_idx, 3]
-        gaze_target = torch.tensor([x, y], dtype=torch.float32)
-        state_target = torch.tensor(state, dtype=torch.float32)
-
-        return {
-            'input': window,   # [10, 640, 480] float16
-            'gaze': gaze_target,
-            'state': state_target
-        }
 
 # ============================================================
 # MAIN TEST LOOP

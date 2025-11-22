@@ -12,4 +12,5 @@ akida_dw_edma/
 *label.txt
 *preprocessed/
 *preprocessed_fast/
+*preprocessed_fast_compact/
 *runs/
