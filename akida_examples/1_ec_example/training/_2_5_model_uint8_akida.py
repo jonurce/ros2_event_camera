@@ -96,7 +96,8 @@ if __name__ == "__main__":
     model.eval()
 
     # Simulate one batch of your data B=4
-    dummy_input = torch.randn((4, 2, 50, 96, 128), dtype=torch.uint8)
+    # dummy_input = torch.randn((4, 2, 50, 96, 128), dtype=torch.uint8)
+    dummy_input = torch.randint(0, 30, (4, 2, 50, 96, 128), dtype=torch.uint8, device=DEVICE)
 
     with torch.no_grad():
         pred = model(dummy_input)
