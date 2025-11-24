@@ -77,7 +77,7 @@ def main():
         state_target = batch['state'].to(DEVICE)
 
         # Forward pass (AMP for speed, optional but nice)
-        with torch.cuda.amp.autocast():
+        with torch.amp.autocast('cuda'):
             gaze_pred, state_logit = model(x)
 
         # Gaze: Mean Absolute Error in pixels

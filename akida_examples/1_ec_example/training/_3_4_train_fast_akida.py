@@ -5,6 +5,7 @@
 # Loss: L1 on soft-argmax gaze + CrossEntropy on confidence channel
 
 import torch
+import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
@@ -22,17 +23,26 @@ torch.backends.cuda.matmul.allow_tf32 = False
 # Benchmark mode can cause huge power spikes at start
 torch.backends.cudnn.benchmark = False
 
+import os
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+os.environ["TORCH_LOGS"] = "" 
+os.environ["TORCH_COMPILE_DEBUG"] = "0"
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning, module="torch._dynamo")
+warnings.filterwarnings("ignore", category=UserWarning, module="torch._logging")
+
+
 # ================================================
 # CONFIG
 # ================================================
-BATCH_SIZE = 16    
-NUM_EPOCHS = 200
-LEARNING_RATE = 0.003
-WEIGHT_DECAY = 0.01
+BATCH_SIZE = 64   
+NUM_EPOCHS = 100
+LEARNING_RATE = 0.002
+WEIGHT_DECAY = 0.005
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 DATA_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_akida")
-LOG_DIR = Path(f"/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_6_akida_b{BATCH_SIZE}_e{NUM_EPOCHS}")
+LOG_DIR = Path(f"/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_10_akida_b{BATCH_SIZE}_e{NUM_EPOCHS}")
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 LOG_FILE = LOG_DIR / f"training_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
 
@@ -95,6 +105,61 @@ class AkidaGazeDataset(Dataset):
             'target': heatmap
         }
 
+# ============================================================
+# Visualize the RAW winning cell + offset (not soft-argmax)
+# ============================================================
+def get_raw_gaze_point(pred):
+    """
+    pred: [B, 3, 50, 3, 4] (from model output)
+    Returns: x_norm, y_norm (in [0,4) and [0,3)), cell_idx (y_idx, x_idx), max_conf
+    """
+    last = pred[..., -1]                    # [B, 3, 3, 4]
+    conf = last[:, 0]                          # [B, 3, 4]
+
+    B, H, W = conf.shape
+    conf_flat = conf.reshape(B, -1)             # [B, 12]
+    max_idx = conf_flat.argmax(dim=-1)          # [B]
+
+    # Convert flat index → (y_idx, x_idx)
+    y_idx = max_idx // W                               # integer division
+    x_idx = max_idx % W
+
+    # Gather offsets from the winning cells
+    # last[:,1] = y_offset raw, last[:,2] = x_offset raw
+    y_offset = torch.gather(last[:, 1].reshape(B, -1), 1, max_idx.unsqueeze(1)).squeeze(1).sigmoid()
+    x_offset = torch.gather(last[:, 2].reshape(B, -1), 1, max_idx.unsqueeze(1)).squeeze(1).sigmoid()
+
+    
+    # Final normalized gaze (in grid space: x ∈ [0,4), y ∈ [0,3))
+    x_norm = x_idx.float() + x_offset
+    y_norm = y_idx.float() + y_offset
+
+    max_conf = conf_flat.gather(1, max_idx.unsqueeze(1)).squeeze(1)
+
+    return x_norm, y_norm, (y_idx, x_idx), max_conf
+
+
+# ============================================================
+# SOFT-ARGMAX GAZE EXTRACTION FOR VALIDATION LOSS
+# ============================================================
+def extract_gaze(pred):
+    """
+    pred: [B, 3, 50, 3, 4] → we only use last time step
+    Returns: gaze error in normalized [0,1] → then scaled to pixels
+    """
+    last = pred[:, :, -1]                     # [B, 3, 3, 4]
+    conf = last[:, 0]                         # [B, 3, 4]
+    prob = F.softmax(conf.flatten(-2), dim=-1).view_as(conf)   # [B, 3, 4]
+
+    x_offset = last[:, 2].sigmoid()           # [B, 3, 4]
+    y_offset = last[:, 1].sigmoid()           # [B, 3, 4]
+
+    x_pred = (prob * x_offset).sum(dim=[-2, -1])   # [B]
+    y_pred = (prob * y_offset).sum(dim=[-2, -1])   # [B]
+
+    return torch.stack([x_pred, y_pred], dim=1)    # [B, 2] in [0,1]
+
+
 # ================================================
 # LOSS — EXACTLY as in BrainChip Akida example
 # ================================================
@@ -105,30 +170,38 @@ def akida_loss(pred, target):
     Returns: L1 on soft-argmax gaze + CE on confidence
     """
     # 1. Confidence Cross-Entropy (over spatial dims only)
+    # loss_ce (Cross-Entropy on confidence) -> “Put the mass on the correct 3×4 cell”
     conf_pred = pred[:, 0]      # [B, 50, 3, 4] → confidence map (logits)
     conf_tgt  = target[:, 0]    # [B, 50, 3, 4] → one-hot: 1.0 at true cell, 0 elsewhere
-
-    # For every time step, we train the network to put high confidence only on the correct cell
     loss_ce = F.cross_entropy(conf_pred.flatten(2), conf_tgt.flatten(2), reduction='mean')
 
-    # 2. L1 on soft-argmax gaze (only last time step, like original paper)
-    last_pred = pred[:, :, -1]   # [B, 3, 3, 4]
-    last_tgt  = target[:, :, -1] # [B, 3, 3, 4]
+    # 2. L1 on soft-argmax gaze (only last time step)
+    # loss_l1 (L1 on soft-argmax gaze) -> “Once you know the cell, give me sub-pixel accuracy”
+    # gaze_pred_norm = extract_gaze(pred) # [B,2] in [0,1]
+    # gaze_gt_norm = extract_gaze(target)  # [B,2] in [0,1]
+    # loss_l1 = F.l1_loss(gaze_pred_norm, gaze_gt_norm)
 
-    # last_pred[:, 0] = raw confidence logits → F.softmax() → prob over cells
-    prob = F.softmax(last_pred[:, 0], dim=(-2,-1))  # [B, 3, 4]
+    pred_x, pred_y, pred_cell, pred_conf = get_raw_gaze_point(pred)
+    gt_x, gt_y, gt_cell, gt_conf = get_raw_gaze_point(target)
 
-    # last_pred[:, 2] = raw x-offset logits → .sigmoid() → value in [0,1]
-    x_pred = (prob * last_pred[:, 2].sigmoid()).sum(dim=[1,2])  # [B]
-    y_pred = (prob * last_pred[:, 1].sigmoid()).sum(dim=[1,2])  # [B]
+    # L1 error in normalized space
+    loss_l1 = F.l1_loss(
+        torch.stack([pred_x / W_OUT, pred_y / H_OUT], dim=1),
+        torch.stack([gt_x   / W_OUT, gt_y   / H_OUT], dim=1)
+    )
+    # or Euclidean in in normalized space
+    loss_l2 = torch.sqrt(
+        ((pred_x - gt_x) / W_OUT)**2 +
+        ((pred_y - gt_y) / H_OUT)**2
+    ).mean()
+    
+    weight_l2 = 2000
 
-    x_gt = (prob.detach() * last_tgt[:, 2]).sum(dim=[1,2])
-    y_gt = (prob.detach() * last_tgt[:, 1]).sum(dim=[1,2])
+    # return loss_ce + weight_l1 * loss_l1, loss_ce, loss_l1, weight_l1
+    return loss_ce + weight_l2 * loss_l2, loss_ce, loss_l2, weight_l2
 
-    loss_l1 = F.l1_loss(torch.stack([x_pred, y_pred], dim=1),
-                        torch.stack([x_gt, y_gt], dim=1))
 
-    return loss_ce + 10.0 * loss_l1, loss_ce.item(), loss_l1.item()
+
 
 # ================================================
 # MAIN TRAINING LOOP
@@ -170,7 +243,9 @@ def main():
         w = csv.writer(f)
         w.writerow(['epoch','train_loss','train_ce','train_l1','val_loss','val_mae_px','lr'])
 
-    best_mae_px = float('inf')
+    # Initialize best metrics for validation and saving best model
+    best_val_loss = float('inf')
+    best_val_loss_l2 = float('inf')
 
     # Handle Ctrl+C
     def save_sigint(sig, frame):
@@ -182,7 +257,7 @@ def main():
     # Training loop
     for epoch in range(NUM_EPOCHS):
         model.train()
-        train_loss = train_loss_ce = train_loss_l1 = 0.0
+        train_loss = train_loss_ce = train_loss_l2 = 0.0
         pbar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{NUM_EPOCHS}")
 
         for batch in pbar:
@@ -198,7 +273,7 @@ def main():
             with torch.amp.autocast('cuda'):
                 # Models predicts: [B,3,50,3,4] float32
                 pred = model(x)                               
-                loss, loss_ce, loss_l1 = akida_loss(pred, y)
+                loss, loss_ce, loss_l2, w_l2 = akida_loss(pred, y)
 
             # main loss backward with scaler
             scaler.scale(loss).backward()
@@ -208,14 +283,21 @@ def main():
 
             # Metrics
             train_loss += loss.item()
-            train_loss_ce += loss_ce
-            train_loss_l1 += loss_l1
-            pbar.set_postfix({'loss': f"{loss.item():.3f}", 'lr': f"{scheduler.get_last_lr()[0]:.2e}"})
+            train_loss_ce += loss_ce.item()
+            train_loss_l2 += loss_l2.item()
+            
+            pbar.set_postfix({
+                'Total Loss': f"{loss.item():.3f}",
+                'Loss CE': f"{loss_ce.item():.3f}",
+                'Loss L1': f"{loss_l2.item():.3f}",
+                'L1 Weight': f"{w_l2:.3f}",
+                'Learning Rate': f"{scheduler.get_last_lr()[0]:.2e}"
+            })
 
         # Validation every 5 epochs
         if (epoch + 1) % 5 == 0 or epoch == NUM_EPOCHS - 1:
             model.eval()
-            val_loss = val_mae_px = 0.0
+            val_loss = val_loss_l2 = 0.0
             with torch.no_grad():
                 for batch in val_loader:
                     # Model expects input:[B,2,50,96,128] uint8
@@ -227,38 +309,64 @@ def main():
                     with torch.amp.autocast('cuda'):
                         # Models predicts: [B,3,50,3,4] float32
                         pred = model(x)
-                        loss, _, loss_l1 = akida_loss(pred, y)
+                        loss, _, loss_l2, w_l2 = akida_loss(pred, y)
                         # Convert L1 from [0,1]→[0,4) back to pixels
                         # same as doing: mae_px = loss_l1 * (W / W_OUT)
-                        mae_px = loss_l1 * (W + H) / (W_OUT + H_OUT)
+                        # mae_px = loss_l1.item() * (W_IN + H_IN) / (W_OUT + H_OUT)
                     
                     val_loss += loss.item()
-                    val_mae_px += mae_px
+                    val_loss_l2 += loss_l2.item()
 
-            n = len(val_loader)
-            val_mae_px /= n
+            n_train = len(train_loader)
+            n_val   = len(val_loader)
+
+            train_loss /= n_train
+            train_loss_ce /= n_train
+            train_loss_l2 /= n_train
+            val_loss /= n_val
+            val_loss_l2 /= n_val
 
             # Log
             with open(LOG_FILE, 'a', newline='') as f:
                 w = csv.writer(f)
                 w.writerow([epoch+1,
-                            f"{train_loss/n:.4f}",
-                            f"{train_loss_ce/n:.4f}",
-                            f"{train_loss_l1/n:.4f}",
-                            f"{val_loss/n:.4f}",
-                            f"{val_mae_px:.2f}",
+                            f"{train_loss:.4f}",
+                            f"{train_loss_ce:.4f}",
+                            f"{train_loss_l2:.4f}",
+                            f"{val_loss:.4f}",
+                            f"{val_loss_l2:.2f}",
                             f"{scheduler.get_last_lr()[0]:.2e}"])
 
-            print(f"→ Val MAE: {val_mae_px:.2f}px | Best: {best_mae_px:.2f}px")
+            print(f"    Validation total loss: {val_loss:.4f} | Best: {best_val_loss:.4f}")
+            print(f"    Validation L2: {val_loss_l2:.2f} | Best: {best_val_loss_l2:.2f}")
 
             # Save best model
-            if val_mae_px < best_mae_px:
-                best_mae_px = val_mae_px
-                torch.save(model.state_dict(), LOG_DIR / "best.pth")
-                print("  NEW BEST!")
+            if val_loss_l2 > 0 and val_loss_l2 < best_val_loss_l2:
+                
+                improvement = (best_val_loss - val_loss) / best_val_loss * 100 if best_val_loss != float('inf') else 0.0
+                improvement_l2 = (best_val_loss_l2 - val_loss_l2) / best_val_loss_l2 * 100 if best_val_loss_l2 != float('inf') else 0.0
+                best_val_loss = val_loss
+                best_val_loss_l2 = val_loss_l2
+
+                # torch.save(model.state_dict(), LOG_DIR / "best.pth")
+                torch.save({
+                    'epoch': epoch + 1,
+                    'model_state_dict': model.state_dict() if not isinstance(model, torch.nn.DataParallel) else model.module.state_dict(),
+                    'val_loss': best_val_loss,
+                    'val_loss_l2': best_val_loss_l2,
+                    'optimizer_state_dict': optimizer.state_dict(),
+                }, LOG_DIR / "best.pth")
+
+                print(f"    NEW BEST! → Loss: {best_val_loss:.4f} (-{improvement:.2f}%) | L2: {best_val_loss_l2:.3f} (-{improvement_l2:.2f}%)")
 
     torch.save(model.state_dict(), LOG_DIR / "final.pth")
-    print(f"\nTraining finished! Best MAE: {best_mae_px:.2f}px")
+    torch.save({
+        'epoch': NUM_EPOCHS,
+        'model_state_dict': model.state_dict() if not isinstance(model, torch.nn.DataParallel) else model.module.state_dict(),
+        'val_loss': val_loss,
+        'val_loss_l2': val_loss_l2,
+    }, LOG_DIR / "final.pth")
+    print(f"\nTraining finished! Best L2: {best_val_loss:.2f}")
 
 if __name__ == "__main__":
     main()
