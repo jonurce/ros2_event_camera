@@ -13,4 +13,5 @@ akida_dw_edma/
 *preprocessed/
 *preprocessed_fast/
 *preprocessed_fast_compact/
+*preprocessed_akida/
 *runs/

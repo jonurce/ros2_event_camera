@@ -108,7 +108,7 @@ class EyeTennSt(nn.Module):
         # [B, 4] -> [B, 2]  
         state = self.fc_state(input) 
 
-        return gaze, state
+        return gaze, state.squeeze(1)
 
 
 # ===================================================================

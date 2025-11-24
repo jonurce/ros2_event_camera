@@ -94,5 +94,6 @@ def inspect_3et_with_blink(root_dir):
     print("\nNEXT STEP → Preprocess to (B, C=2, T, H, W) + labels (x,y,state)")
 
 if __name__ == "__main__":
-    path_to_event_data = '/home/jetson/Jon/IndustrialProject/akida_examples/1_ec_example/training/event-based-eye-tracking-cvpr-2025/3ET+ dataset/event_data/'
+    # path_to_event_data = '/home/jetson/Jon/IndustrialProject/akida_examples/1_ec_example/training/event-based-eye-tracking-cvpr-2025/3ET+ dataset/event_data/'
+    path_to_event_data = "/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/event-based-eye-tracking-cvpr-2025/3ET+ dataset/event_data"
     inspect_3et_with_blink(path_to_event_data)

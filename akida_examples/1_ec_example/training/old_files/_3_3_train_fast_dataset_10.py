@@ -121,17 +121,6 @@ class SimpleLogger:
         print(f"Epoch {epoch+1} | Val MAE: {val_gaze_mae:.2f}px | State Acc: {val_state_acc*100:.2f}% | LR: {lr:.6f}")
 
 # ============================================================
-# SAVEPOINT HANDLER
-# ============================================================
-def save_on_interrupt(sig, frame):
-    print("\nCtrl+C detected! Saving current model as 'stopped.pth'...")
-    torch.save(model.state_dict(), f"{LOG_DIR}/stopped.pth")
-    print("Model saved. Exiting.")
-    exit(0)
-
-signal.signal(signal.SIGINT, save_on_interrupt)
-
-# ============================================================
 # MAIN TRAINING LOOP — NOW WITH SPEED BOOSTS
 # ============================================================
 def main():
@@ -177,6 +166,14 @@ def main():
     logger = SimpleLogger(LOG_FILE)
     print(f"Logging to: {LOG_FILE}")
     best_val_loss = float('inf')
+
+    def save_on_interrupt(sig, frame):
+        print("\nCtrl+C detected! Saving current model as 'stopped.pth'...")
+        torch.save(model.state_dict(), f"{LOG_DIR}/stopped.pth")
+        print("Model saved. Exiting.")
+        exit(0)
+
+    signal.signal(signal.SIGINT, save_on_interrupt)
 
     # Training loop
     for epoch in range(NUM_EPOCHS):
