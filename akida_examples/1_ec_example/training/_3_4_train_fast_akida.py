@@ -35,14 +35,14 @@ warnings.filterwarnings("ignore", category=UserWarning, module="torch._logging")
 # ================================================
 # CONFIG
 # ================================================
-BATCH_SIZE = 64   
-NUM_EPOCHS = 100
+BATCH_SIZE = 128   
+NUM_EPOCHS = 10
 LEARNING_RATE = 0.002
 WEIGHT_DECAY = 0.005
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 DATA_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_akida")
-LOG_DIR = Path(f"/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_10_akida_b{BATCH_SIZE}_e{NUM_EPOCHS}")
+LOG_DIR = Path(f"/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_12_akida_b{BATCH_SIZE}_e{NUM_EPOCHS}")
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 LOG_FILE = LOG_DIR / f"training_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
 
@@ -108,21 +108,21 @@ class AkidaGazeDataset(Dataset):
 # ============================================================
 # Visualize the RAW winning cell + offset (not soft-argmax)
 # ============================================================
-def get_raw_gaze_point(pred):
+def get_out_gaze_point(pred):
     """
     pred: [B, 3, 50, 3, 4] (from model output)
-    Returns: x_norm, y_norm (in [0,4) and [0,3)), cell_idx (y_idx, x_idx), max_conf
+    Returns: x_out, y_out (in [0,4) and [0,3)), cell_idx (y_idx, x_idx), max_conf
     """
-    last = pred[..., -1]                    # [B, 3, 3, 4]
-    conf = last[:, 0]                          # [B, 3, 4]
+    last = pred[:, :, -1]   # [B, 3, 3, 4]
+    conf = last[:, 0]       # [B, 3, 4]
 
     B, H, W = conf.shape
     conf_flat = conf.reshape(B, -1)             # [B, 12]
     max_idx = conf_flat.argmax(dim=-1)          # [B]
 
     # Convert flat index → (y_idx, x_idx)
-    y_idx = max_idx // W                               # integer division
-    x_idx = max_idx % W
+    y_idx = max_idx // W_OUT      # integer division
+    x_idx = max_idx % W_OUT
 
     # Gather offsets from the winning cells
     # last[:,1] = y_offset raw, last[:,2] = x_offset raw
@@ -131,16 +131,60 @@ def get_raw_gaze_point(pred):
 
     
     # Final normalized gaze (in grid space: x ∈ [0,4), y ∈ [0,3))
-    x_norm = x_idx.float() + x_offset
-    y_norm = y_idx.float() + y_offset
+    x_out = x_idx.float() + x_offset
+    y_out = y_idx.float() + y_offset
 
     max_conf = conf_flat.gather(1, max_idx.unsqueeze(1)).squeeze(1)
 
-    return x_norm, y_norm, (y_idx, x_idx), max_conf
+    return x_out, y_out, (y_idx, x_idx), max_conf
+
+# ============================================================
+# Test get_raw_gaze_point()
+# ============================================================
+def test_get_raw_gaze_point():
+
+    B, T, C, H, W_OUT = 4, 50, 3, 3, 4
+
+    # TEST: Create fake heatmaps with known ground truth
+    torch.manual_seed(42)
+    pred = torch.randn(B, C, T, H, W_OUT) * 0.1  # small noise
+
+    # Force known winning cells and offsets for each batch
+    true_cells = [(1, 2), (0, 0), (2, 3), (1, 1)]   # (y_idx, x_idx)
+    true_offsets = [(0.7, 0.3), (0.1, 0.9), (0.5, 0.5), (0.8, 0.2)]
+
+    for b in range(B):
+        y_idx, x_idx = true_cells[b]
+        y_off, x_off = true_offsets[b]
+        
+        # Set high confidence at known cell
+        pred[b, 0, :, y_idx, x_idx] = 1.0  # high logit → wins
+        pred[b, 1, -1, y_idx, x_idx] = torch.logit(torch.tensor(y_off))  # y_offset raw
+        pred[b, 2, -1, y_idx, x_idx] = torch.logit(torch.tensor(x_off))  # x_offset raw
+
+    # Run function
+    x_out, y_out, (y_idx, x_idx), max_conf = get_raw_gaze_point(pred)
+
+    # Expected values
+    expected_x = torch.tensor([2 + 0.3, 0 + 0.9, 3 + 0.5, 1 + 0.2])
+    expected_y = torch.tensor([1 + 0.7, 0 + 0.1, 2 + 0.5, 1 + 0.8])
+
+    print("Batch | X Out | Y Out | X Expected | Y Expected | Cell (y,x) | OK?")
+    print("-" * 60)
+    for b in range(B):
+        ok = (abs(x_out[b] - expected_x[b]) < 1e-4) and (abs(y_out[b] - expected_y[b]) < 1e-4)
+        print(f"{b:5} | {x_out[b]:.4f} | {y_out[b]:.4f} | {expected_x[b]:.4f} | {expected_y[b]:.4f} | "
+            f"{y_idx[b].item(), x_idx[b].item()}     | {'YES' if ok else 'NO'}")
+
+    # Final check
+    assert torch.allclose(x_out, expected_x, atol=1e-4)
+    assert torch.allclose(y_out, expected_y, atol=1e-4)
+    print("\nAll tests passed! Function is 100% correct.")
+
 
 
 # ============================================================
-# SOFT-ARGMAX GAZE EXTRACTION FOR VALIDATION LOSS
+#  NOT USED * SOFT-ARGMAX GAZE EXTRACTION FOR VALIDATION LOSS
 # ============================================================
 def extract_gaze(pred):
     """
@@ -167,7 +211,7 @@ def akida_loss(pred, target):
     """
     pred:   [B, 3, 50, 3, 4] float32
     target: [B, 3, 50, 3, 4] float32
-    Returns: L1 on soft-argmax gaze + CE on confidence
+    Returns: L2 on soft-argmax gaze + CE on confidence
     """
     # 1. Confidence Cross-Entropy (over spatial dims only)
     # loss_ce (Cross-Entropy on confidence) -> “Put the mass on the correct 3×4 cell”
@@ -181,19 +225,16 @@ def akida_loss(pred, target):
     # gaze_gt_norm = extract_gaze(target)  # [B,2] in [0,1]
     # loss_l1 = F.l1_loss(gaze_pred_norm, gaze_gt_norm)
 
-    pred_x, pred_y, pred_cell, pred_conf = get_raw_gaze_point(pred)
-    gt_x, gt_y, gt_cell, gt_conf = get_raw_gaze_point(target)
+    pred_x, pred_y, pred_cell, pred_conf = get_out_gaze_point(pred)
+    gt_x, gt_y, gt_cell, gt_conf = get_out_gaze_point(target)
 
     # L1 error in normalized space
     loss_l1 = F.l1_loss(
         torch.stack([pred_x / W_OUT, pred_y / H_OUT], dim=1),
         torch.stack([gt_x   / W_OUT, gt_y   / H_OUT], dim=1)
     )
-    # or Euclidean in in normalized space
-    loss_l2 = torch.sqrt(
-        ((pred_x - gt_x) / W_OUT)**2 +
-        ((pred_y - gt_y) / H_OUT)**2
-    ).mean()
+    # or Euclidean in OUT pixel space
+    loss_l2 = torch.sqrt(  (pred_x - gt_x)**2  +  (pred_y - gt_y)**2  ).mean()
     
     weight_l2 = 2000
 
@@ -241,7 +282,7 @@ def main():
     # Logger
     with open(LOG_FILE, 'w', newline='') as f:
         w = csv.writer(f)
-        w.writerow(['epoch','train_loss','train_ce','train_l1','val_loss','val_mae_px','lr'])
+        w.writerow(['epoch','train_loss','train_ce','train_l2','val_loss','val_loss_l2','lr'])
 
     # Initialize best metrics for validation and saving best model
     best_val_loss = float('inf')
@@ -289,8 +330,8 @@ def main():
             pbar.set_postfix({
                 'Total Loss': f"{loss.item():.3f}",
                 'Loss CE': f"{loss_ce.item():.3f}",
-                'Loss L1': f"{loss_l2.item():.3f}",
-                'L1 Weight': f"{w_l2:.3f}",
+                'Loss L2': f"{loss_l2.item():.3f}",
+                'L2 Weight': f"{w_l2:.3f}",
                 'Learning Rate': f"{scheduler.get_last_lr()[0]:.2e}"
             })
 
@@ -370,3 +411,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+    # test_get_raw_gaze_point()
+

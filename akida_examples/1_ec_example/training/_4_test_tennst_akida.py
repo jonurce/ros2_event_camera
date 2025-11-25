@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 # ←←← IMPORT YOUR AKIDA MODEL AND DATASET ←←←
 from _2_5_model_uint8_akida import EyeTennSt
-from _3_4_train_fast_akida import AkidaGazeDataset, extract_gaze
+from _3_4_train_fast_akida import AkidaGazeDataset, get_out_gaze_point
 
 # Performance settings
 torch.backends.cuda.matmul.allow_tf32 = False
@@ -30,7 +30,7 @@ DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 DATA_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_akida")
 
 # ←←← CHANGE THIS: your best.pth from the new training run
-MODEL_PATH = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_8_akida_b64_e100/best.pth")
+MODEL_PATH = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_12_akida_b128_e10/best.pth")
 
 BATCH_SIZE = 128        # even larger = faster inference (uint8 input = tiny memory)
 W, H = 640, 480         # original image size
@@ -74,7 +74,7 @@ def main():
     if 'model_state_dict' in checkpoint:
         state_dict = checkpoint['model_state_dict']
         print(f"Loaded checkpoint from epoch {checkpoint.get('epoch', '?')}")
-        print(f"   → val_loss: {checkpoint.get('val_loss', 'N/A'):.4f} | val_mae_px: {checkpoint.get('val_mae_px', 'N/A'):.3f}")
+        print(f"   → val_loss: {checkpoint.get('val_loss', 'N/A'):.4f} | val_loss_l2: {checkpoint.get('val_loss_l2', 'N/A'):.3f}")
     else:
         state_dict = checkpoint  # old format: direct state_dict
     
@@ -94,41 +94,46 @@ def main():
     print("Starting inference on test set...")
     for batch in tqdm(test_loader, desc="Testing"):
         x = batch['input'].to(DEVICE, non_blocking=True)      # [B,2,50,96,128] uint8
-        heatmap_target = batch['target'].to(DEVICE, non_blocking=True)  # [B,3,50,3,4]
+        target = batch['target'].to(DEVICE, non_blocking=True)  # [B,3,50,3,4]
 
         with torch.amp.autocast('cuda'):
             pred = model(x)                                   # [B,3,50,3,4]
 
-        # Extract predicted gaze in normalized coordinates
-        gaze_pred_norm = extract_gaze(pred)                   # [B,2] in [0,1]
+        # Extract predicted gaze in out coordinates
+        pred_x, pred_y, pred_cell, pred_conf = get_out_gaze_point(pred)
 
-        # Extract GT gaze using SAME soft-argmax (for fair comparison)
-        gaze_gt_norm = extract_gaze(heatmap_target)
+        # Extract target gaze in out coordinates
+        gt_x, gt_y, gt_cell, gt_conf = get_out_gaze_point(target)
 
-        # Convert to real pixels
-        gaze_pred_px = gaze_pred_norm * torch.tensor([W_IN, H_IN], device=DEVICE)
-        gaze_gt_px   = gaze_gt_norm   * torch.tensor([W_IN, H_IN], device=DEVICE)
+        # pred_x, pred_y ∈ [0,4) and [0,3) → grid coordinates
+        # Convert to model input pixels (128x96)
+        pred_px = pred_x * (W_IN / W_OUT)  
+        pred_py = pred_y * (H_IN / H_OUT)  
+        gt_px   = gt_x   * (W_IN / W_OUT)
+        gt_py   = gt_y   * (H_IN / H_OUT)
 
-        # MAE in pixels
-        error_px = torch.abs(gaze_pred_px - gaze_gt_px).sum(dim=1)   # L1 per sample
-        total_gaze_error_px += error_px.sum().item()
+        # Now L2 in real pixels
+        loss_l2_px = torch.sqrt((pred_px - gt_px)**2 + (pred_py - gt_py)**2).mean()
+
+        # Accumulate real pixel error
+        total_gaze_error_px += loss_l2_px.sum().item()
         total_samples += x.size(0)
 
     # Final results
-    avg_mae_px = total_gaze_error_px / total_samples
+    avg_l2_px = total_gaze_error_px / total_samples
 
     print("\n" + "="*60)
     print("FINAL AKIDA-EXACT TEST RESULTS")
     print("="*60)
-    print(f"Total test samples : {total_samples:,}")
-    print(f"Gaze MAE           : {avg_mae_px:.3f} pixels")
-    print(f"Pixel scale factor : {PIXEL_SCALE:.1f} px per cell")
+    print(f"Total test samples          : {total_samples:,}")
+    print(f"Gaze L2 (in model input px) : {avg_l2_px:.3f} pixels")
+    print(f"Pixel scale factor          : {PIXEL_SCALE:.1f} px per cell")
     print("="*60)
 
     # Save results
     result_file = MODEL_PATH.parent / "test_results.txt"
     with open(result_file, 'w') as f:
-        f.write(f"Gaze MAE: {avg_mae_px:.3f} px\n")
+        f.write(f"Gaze L2 (in model input px): {avg_l2_px:.3f} px\n")
         f.write(f"Total samples: {total_samples}\n")
         f.write(f"Dataset: {DATA_ROOT}\n")
         f.write(f"Model: {MODEL_PATH.name}\n")

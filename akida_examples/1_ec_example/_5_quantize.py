@@ -1,28 +1,30 @@
-# 5_quantize.py
-# Quantize trained EyeTennSt (PyTorch) → int8 / int4 for Akida SNN conversion
-# Uses quantizeml (official BrainChip tool) — the same as in Akida examples
+# _5_quantize_akida.py
+# Quantize trained EyeTennSt (Akida-style) → int8 / int4 for Akida SNN conversion
+# Now works with: uint8 [2,50,96,128] input + heatmap [3,50,3,4] output
+# Uses quantizeml (official BrainChip tool)
 
 import torch
+import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from pathlib import Path
 import numpy as np
 from tqdm import tqdm
 
 # Akida quantization tools
-from quantizeml.models import quantize
+from quantizeml.models import quantize, load_model
 from quantizeml.layers import QuantizationParams
 
-# Your model and dataset
-from training._2_model_f16 import EyeTennSt
-from training._3_train_even_faster import EyeTrackingDataset  # ← use the fast one we made
+# Model and dataset
+from training._2_5_model_uint8_akida import EyeTennSt
+from training._3_4_train_fast_akida import AkidaGazeDataset, get_out_gaze_point 
 
 # ============================================================
-# CONFIG — UPDATE THESE
+# CONFIG 
 # ============================================================
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Paths
-MODEL_PATH = Path("training/runs/tennst_3_f16_batch_64_epochs_150/best.pth")           # your trained float16 model
+MODEL_PATH = Path("training/runs/tennst_11_akida_b128_epochs_100/best.pth") 
 DATA_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_fast")
 
 # Output
@@ -33,60 +35,60 @@ print(f"Loading model from: {MODEL_PATH}")
 print(f"Using calibration data from: {DATA_ROOT/'train'}")
 
 # ============================================================
-# 1. Load trained PyTorch model and convert to Keras
+# 1. Load trained PyTorch model
 # ============================================================
-# Load PyTorch weights
-state_dict = torch.load(MODEL_PATH, map_location="cpu")
-pytorch_model = EyeTennSt(t_kernel_size=5, s_kernel_size=3, n_depthwise_layers=6)
-pytorch_model.load_state_dict(state_dict)
-pytorch_model.eval()
 
-# Export to Keras via TorchScript → ONNX → Keras (quantizeml handles this)
-# quantizeml accepts PyTorch models directly via torch.export or ONNX
-# We use the recommended way: export to ONNX first
-print("Exporting PyTorch model to ONNX...")
-dummy_input = torch.randn(1, 10, 640, 480, device="cpu", dtype=torch.float16)  # matches training
-TMP_QUANTIZED_MODEL_PATH = f"{QUANTIZED_FOLDER_PATH}/tmp_eyetennst.onnx"
+state_dict = torch.load(MODEL_PATH, map_location="cpu")
+model = EyeTennSt(t_kernel_size=5, s_kernel_size=3, n_depthwise_layers=4).eval()
+model.load_state_dict(state_dict if "model_state_dict" not in state_dict else state_dict["model_state_dict"])
+print("PyTorch model loaded")
+
+# ============================================================
+# 2. Export to ONNX (quantizeml accepts ONNX directly)
+# ============================================================
+
+print("Exporting to ONNX...")
+dummy_input = torch.randint(0, 256, (1, 2, 50, 96, 128), dtype=torch.uint8, device="cpu")  # ← uint8 input!
+
+onnx_path = QUANTIZED_FOLDER_PATH / "eyetennst_akida.onnx"
 torch.onnx.export(
-    pytorch_model,
+    model,
     dummy_input,
-    TMP_QUANTIZED_MODEL_PATH,
+    onnx_path,
     export_params=True,
     opset_version=17,
     do_constant_folding=True,
-    input_names=['input'],
-    output_names=['gaze', 'state'],
-    dynamic_axes={'input': {0: 'batch'}}
+    input_names=["input"],
+    output_names=["output"],
+    dynamic_axes={"input": {0: "batch"}}
 )
-print("ONNX export done → tmp_eyetennst.onnx")
+print(f"ONNX exported → {onnx_path}")
 
-# Load as Keras model (quantizeml can read ONNX directly)
-from quantizeml.models import load_model
-model_keras = load_model(TMP_QUANTIZED_MODEL_PATH)
+# Load as Keras model
+model_keras = load_model(str(onnx_path))
 print("Keras model loaded from ONNX")
 
 # ============================================================
-# 2. Prepare calibration dataset (1000–2000 samples recommended)
+# 3. Calibration dataset (from preprocessed_akida)
 # ============================================================
-calib_dataset = EyeTrackingDataset(split="train")
-calib_loader = DataLoader(calib_dataset, batch_size=64, shuffle=True, num_workers=8)
+
+calib_dataset = AkidaGazeDataset(split="train")
+calib_loader = DataLoader(calib_dataset, batch_size=64, shuffle=True, num_workers=8, pin_memory=True)
 
 calibration_samples = []
-print("Collecting calibration samples...")
-for i, batch in enumerate(tqdm(calib_loader)):
-    if i >= 20:  # ~1280 samples
+print("Collecting calibration samples (uint8 voxels)...")
+for i, batch in enumerate(tqdm(calib_loader, total=25)):
+    if i >= 25:  # ~1600 samples
         break
-    x = batch['input']  # [B, 10, 640, 480] float16
-    calibration_samples.append(x.numpy())  # quantizeml wants numpy
-
+    x = batch['input'].numpy()    # ← [B,2,50,96,128] uint8 → numpy
+    calibration_samples.append(x)
 calibration_samples = np.concatenate(calibration_samples, axis=0)
 print(f"Collected {len(calibration_samples)} calibration samples")
 
 # ============================================================
-# 3. QUANTIZATION OPTIONS — Choose one
+# 4. QUANTIZATION
 # ============================================================
 
-# OPTION A: 8-bit quantization (best accuracy, good for Akida)
 print("\nQuantizing to 8-bit...")
 qparams_8bit = QuantizationParams(
     input_weight_bits=8,
@@ -104,29 +106,94 @@ model_q8 = quantize(
     epochs=1
 )
 
-# OPTION B: 4-bit (smaller, for maximum efficiency)
 print("\nQuantizing to 4-bit...")
 qparams_4bit = QuantizationParams(
-   input_weight_bits=8,
-   weight_bits=4,
-   activation_bits=4,
-   per_tensor_activations=True
+    input_weight_bits=8,
+    weight_bits=4,
+    activation_bits=4,
+    per_tensor_activations=True
 )
-model_q4 = quantize(model_keras, qparams=qparams_4bit,
-                     samples=calibration_samples, num_samples=1024)
+model_q4 = quantize(
+    model_keras,
+    qparams=qparams_4bit,
+    samples=calibration_samples,
+    num_samples=1024,
+    batch_size=64,
+    epochs=1
+)
 
 # ============================================================
-# 4. Save quantized model
+# 5. Save quantized models
+# ============================================================
+INT8_PATH = QUANTIZED_FOLDER_PATH / "q_tennst_int8.keras"
+INT4_PATH = QUANTIZED_FOLDER_PATH / "q_tennst_int4.keras"
+
+model_q8.save(INT8_PATH)
+model_q4.save(INT4_PATH)
+
+print(f"\nQuantized models saved:")
+print(f"  INT8 → {INT8_PATH}")
+print(f"  INT4 → {INT4_PATH}")
+
+# ============================================================
+# 6. Evaluation on test set (using out cell + offset → real px)
 # ============================================================
 
-INT4_QUANTIZED_MODEL_PATH = f"{QUANTIZED_FOLDER_PATH}/q_tennst_int4.keras"
-INT8_QUANTIZED_MODEL_PATH = f"{QUANTIZED_FOLDER_PATH}/q_tennst_int8.keras"
+print("\n" + "="*70)
+print("EVALUATING QUANTIZED MODELS (Gaze MAE in pixels)")
+print("="*70)
 
-model_q4.save(INT4_QUANTIZED_MODEL_PATH)
-print(f"\nQuantized model saved to: {INT4_QUANTIZED_MODEL_PATH}")
+test_dataset = AkidaGazeDataset(split="test")
+test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False, num_workers=8, pin_memory=True)
 
-model_q8.save(INT8_QUANTIZED_MODEL_PATH)
-print(f"\nQuantized model saved to: {INT8_QUANTIZED_MODEL_PATH}")
+def evaluate_model(model_keras, name, path=None):
+    total_error_px = 0.0
+    total_samples = 0
+    pbar = tqdm(test_loader, desc=f"Eval {name}", leave=False)
+    for batch in pbar:
+        x_np = batch['input'].numpy()           # [B,2,50,96,128] uint8
+        target = batch['target'].numpy()        # [B,3,50,3,4] float32
+
+        # Keras inference
+        pred_heatmap = model_keras.predict(x_np, verbose=0)  # [B,3,50,3,4]
+
+        # Convert to torch for get_out_gaze_point
+        pred_t = torch.from_numpy(pred_heatmap)
+        targ_t = torch.from_numpy(target)
+
+        pred_x, pred_y, _, _ = get_out_gaze_point(pred_t)
+        gt_x,   gt_y,   _, _ = get_out_gaze_point(targ_t)
+
+        # Convert to real pixels
+        pred_px = pred_x * 160.0
+        pred_py = pred_y * 160.0
+        gt_px   = gt_x   * 160.0
+        gt_py   = gt_y   * 160.0
+
+        error_px = torch.sqrt((pred_px - gt_px)**2 + (pred_py - gt_py)**2)
+        total_error_px += error_px.sum().item()
+        total_samples += x_np.shape[0]
+
+    mae_px = total_error_px / total_samples
+    size_str = format_size(os.path.getsize(path)) if path and path.exists() else "N/A"
+    return {"name": name, "mae": mae_px, "size_str": size_str, "samples": total_samples}
+
+def format_size(b):
+    for unit in ['B', 'KB', 'MB', 'GB']:
+        if b < 1024: return f"{b:.1f}{unit}"
+        b /= 1024
+    return f"{b:.1f}GB"
+
+
+
+
+
+
+
+
+
+
+
 
 
 # ============================================================

@@ -22,12 +22,12 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # PATHS
 DATA_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_akida")
-MODEL_PATH = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_8_akida_b64_e100/best.pth")
+MODEL_PATH = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_11_akida_b128_e100/best.pth")
 
 # Which sample to visualize
 SPLIT = "test"
-REC_ID = "3_1"           # folder name inside test/
-SAMPLE_IDX = 100         # index inside that recording
+REC_ID = "1_1"           # folder name inside test/
+SAMPLE_IDX = 200         # index inside that recording
 
 W, H = 640, 480         # original image size
 W_IN, H_IN = 128, 96    # Akida input size
@@ -55,7 +55,7 @@ checkpoint = torch.load(MODEL_PATH, map_location=DEVICE)
 if 'model_state_dict' in checkpoint:
     state_dict = checkpoint['model_state_dict']
     print(f"Loaded checkpoint from epoch {checkpoint.get('epoch', '?')}")
-    print(f"   → val_loss: {checkpoint.get('val_loss', 'N/A'):.4f} | val_mae_px: {checkpoint.get('val_mae_px', 'N/A'):.3f}")
+    print(f"   → val_loss: {checkpoint.get('val_loss', 'N/A'):.4f} | val_loss_l2: {checkpoint.get('val_loss_l2', 'N/A'):.3f}")
 else:
     state_dict = checkpoint  # old format: direct state_dict
 
@@ -113,7 +113,7 @@ target = found_sample['target'].unsqueeze(0).to(DEVICE)  # [1,3,50,3,4]
 # ============================================================
 # CORRECTED: Visualize the RAW winning cell + offset (not soft-argmax)
 # ============================================================
-def get_raw_gaze_point(heatmap_batch):
+def get_original_gaze_point(heatmap_batch):
     """
     heatmap_batch: [1, 3, 50, 3, 4] (from model output)
     Returns: (x_px, y_px) from the cell with highest confidence + its offsets
@@ -124,7 +124,7 @@ def get_raw_gaze_point(heatmap_batch):
     # Find cell with highest confidence
     conf_flat = conf.flatten()
     max_idx = conf_flat.argmax().item()
-    y_idx, x_idx = np.unravel_index(max_idx, (3, 4))  # row, col
+    y_idx, x_idx = np.unravel_index(max_idx, (H_OUT, W_OUT))  # row, col
 
     # Get offsets from that cell
     y_offset = last[1, y_idx, x_idx].sigmoid().item() if torch.is_tensor(last[1, y_idx, x_idx]) else last[1, y_idx, x_idx]
@@ -134,7 +134,7 @@ def get_raw_gaze_point(heatmap_batch):
     cell_x = x_idx * (W / W_OUT)   # 640 
     cell_y = y_idx * (H / H_OUT)   # 480
 
-    x_px = cell_x + x_offset * (W / W_OUT)   # ±80 px max offset
+    x_px = cell_x + x_offset * (W / W_OUT)   # ±160 px max offset
     y_px = cell_y + y_offset * (H / H_OUT)
 
     return x_px, y_px, (x_idx, y_idx), conf_flat[max_idx].item()
@@ -148,11 +148,11 @@ with torch.no_grad(), torch.amp.autocast('cuda'):
     pred = model(x)         # [1,3,50,3,4]
 
 # PREDICTION: raw winning cell + offset
-pred_x, pred_y, pred_cell, pred_conf = get_raw_gaze_point(pred)
+pred_x, pred_y, pred_cell, pred_conf = get_original_gaze_point(pred)
 print(f"Pred → Cell: {pred_cell} | Conf: {pred_conf:.3f} | Offset: ({(pred_x):.1f}, {(pred_y):.1f})")
 
 # GROUND TRUTH: from target heatmap (should be clean)
-gt_x, gt_y, gt_cell, gt_conf = get_raw_gaze_point(target)
+gt_x, gt_y, gt_cell, gt_conf = get_original_gaze_point(target)
 print(f"GT → Cell: {gt_cell} | Conf: {gt_conf:.3f} | Offset: ({(gt_x):.1f}, {(gt_y):.1f})")
 
 # Also compute soft-argmax for comparison (optional)
@@ -163,6 +163,7 @@ gaze_pred_soft_px = gaze_pred_soft * np.array([W, H])
 error_px = np.sqrt((pred_x - gt_x)**2 + (pred_y - gt_y)**2)
 print(f"Error (raw cell+offset): {error_px:.2f} px")
 print(f"Error (soft-argmax): {np.linalg.norm(gaze_pred_soft_px - np.array([gt_x, gt_y])):.2f} px")
+
 # ============================================================
 # Prepare events for plotting (accumulate polarity)
 # ============================================================
@@ -197,7 +198,7 @@ plt.ylabel("Y (px)")
 
 # Plot gaze
 plt.plot(gt_x, gt_y, 'r+', markersize=12, markeredgewidth=3, label='Ground Truth')
-plt.plot(pred_x, pred_y, 'go', markersize=12, markeredgewidth=3, label='Prediction')
+plt.plot(pred_x, pred_y, 'g+', markersize=12, markeredgewidth=3, label='Prediction')
 plt.legend(fontsize=12)
 plt.xlim(0, 640)
 plt.ylim(0, 480)
@@ -216,7 +217,7 @@ for t in range(T):
 
 # Plot gaze at last time step
 ax.scatter([49], [gt_x], [gt_y], c='red', s=200, marker='+', linewidth=3, label='GT')
-ax.scatter([49], [pred_x], [pred_y], c='green', s=200, marker='o', linewidth=3, label='Pred')
+ax.scatter([49], [pred_x], [pred_y], c='green', s=200, marker='+', linewidth=3, label='Pred')
 
 ax.set_xlabel("Time (0–49)")
 ax.set_ylabel("X (px ×5)")
