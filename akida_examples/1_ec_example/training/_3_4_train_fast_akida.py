@@ -181,8 +181,6 @@ def test_get_raw_gaze_point():
     assert torch.allclose(y_out, expected_y, atol=1e-4)
     print("\nAll tests passed! Function is 100% correct.")
 
-
-
 # ============================================================
 #  NOT USED * SOFT-ARGMAX GAZE EXTRACTION FOR VALIDATION LOSS
 # ============================================================
@@ -202,7 +200,6 @@ def extract_gaze(pred):
     y_pred = (prob * y_offset).sum(dim=[-2, -1])   # [B]
 
     return torch.stack([x_pred, y_pred], dim=1)    # [B, 2] in [0,1]
-
 
 # ================================================
 # LOSS — EXACTLY as in BrainChip Akida example
@@ -240,9 +237,6 @@ def akida_loss(pred, target):
 
     # return loss_ce + weight_l1 * loss_l1, loss_ce, loss_l1, weight_l1
     return loss_ce + weight_l2 * loss_l2, loss_ce, loss_l2, weight_l2
-
-
-
 
 # ================================================
 # MAIN TRAINING LOOP
