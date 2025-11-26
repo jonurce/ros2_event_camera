@@ -49,7 +49,7 @@ BATCH_S = 10
 max_batch_number = 5
 
 # Output
-QUANTIZED_FOLDER_PATH = Path("akida_examples/1_ec_example/quantized_models")
+QUANTIZED_FOLDER_PATH = Path("akida_examples/1_ec_example/quantized_models_2")
 QUANTIZED_FOLDER_PATH.mkdir(exist_ok=True)
 
 print(f"Loading model from: {MODEL_PATH}")
@@ -152,10 +152,10 @@ os.environ["CUDA_VISIBLE_DEVICES"] = ""          # ← Disable GPU completely fo
 tf.config.set_visible_devices([], 'GPU')         # ← Extra safety — hide GPU from TF
 
 # Akida quantization tools
-from quantizeml.models import quantize
+from quantizeml.models import quantize, QuantizationParams
 from quantizeml import save_model
 # from quantizeml import load_model
-from quantizeml.layers import QuantizationParams
+# from quantizeml.layers import QuantizationParams
 # from cnn2snn import convert, quantize, set_akida_version
 
 torch.cuda.empty_cache()
@@ -203,6 +203,8 @@ print(f"ONNX exported → {onnx_path}")
 
 model_onnx = onnx.load(str(onnx_path))
 print("ONNX model loaded")
+print("Input shape:", [x.dim_value or x.dim_param for x in model_onnx.graph.input[0].type.tensor_type.shape.dim])
+print("Output shape:", [x.dim_value or x.dim_param for x in model_onnx.graph.output[0].type.tensor_type.shape.dim])
 
 
 
@@ -266,9 +268,8 @@ model_q8 = quantize(
 print("8-bit quantization successful!")
 
 
-# print("\nQuantized model summary (INT8):")
-# print(model_q8)
-
+# print("\nQuantized model summary (INT8) before saving to ONNX:")
+# model_q8.summary()
 
 
 
@@ -281,10 +282,11 @@ save_model(model_q8, INT8_PATH)
 print(f"\nQuantized model saved:")
 print(f"  INT8 → {INT8_PATH}")
 
-# print("\nVerifying saved INT8 model structure...")
-# from onnx import helper
-# model_onnx = onnx.load(INT8_PATH)
-# print(helper.printable_graph(model_onnx.graph))
+print("\nVerifying saved INT8 model structure...")
+model_onnx_int8 = onnx.load(str(INT8_PATH))
+print("Int8 ONNX model loaded")
+print("Input shape:", [x.dim_value or x.dim_param for x in model_onnx_int8.graph.input[0].type.tensor_type.shape.dim])
+print("Output shape:", [x.dim_value or x.dim_param for x in model_onnx_int8.graph.output[0].type.tensor_type.shape.dim])
 
 
 

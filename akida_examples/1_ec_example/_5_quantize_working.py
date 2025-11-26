@@ -199,6 +199,9 @@ print(f"ONNX exported → {onnx_path}")
 
 model_onnx = onnx.load(str(onnx_path))
 print("ONNX model loaded")
+print("Input shape:", [x.dim_value or x.dim_param for x in model_onnx.graph.input[0].type.tensor_type.shape.dim])
+print("Output shape:", [x.dim_value or x.dim_param for x in model_onnx.graph.output[0].type.tensor_type.shape.dim])
+
 
 
 
@@ -277,10 +280,11 @@ save_model(model_q8, INT8_PATH)
 print(f"\nQuantized model saved:")
 print(f"  INT8 → {INT8_PATH}")
 
-# print("\nVerifying saved INT8 model structure...")
-# from onnx import helper
-# model_onnx = onnx.load(INT8_PATH)
-# print(helper.printable_graph(model_onnx.graph))
+print("\nVerifying saved INT8 model structure...")
+model_onnx_int8 = onnx.load(str(INT8_PATH))
+print("Int8 ONNX model loaded")
+print("Input shape:", [x.dim_value or x.dim_param for x in model_onnx_int8.graph.input[0].type.tensor_type.shape.dim])
+print("Output shape:", [x.dim_value or x.dim_param for x in model_onnx_int8.graph.output[0].type.tensor_type.shape.dim])
 
 
 
