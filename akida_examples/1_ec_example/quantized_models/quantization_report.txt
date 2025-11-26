@@ -1,0 +1,11 @@
+Akida-Style EyeTennSt Quantization Report
+=================================================================
+Model           Gaze L2 (px)     Δ vs Tennst            Size    Reduction
+-----------------------------------------------------------------
+Tennst                30.821               -          12.3MB            -
+INT8                  33.311   +2.490 px           1.0MB        91.5%
+-----------------------------------------------------------------
+Test samples: 7,094
+Original model: /home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_11_akida_b128_e100/best.pth (12.3MB)
+Quantized folder: akida_examples/1_ec_example/quantized_models
+Generated: 2025-11-26 15:27:12

@@ -108,12 +108,16 @@ class AkidaGazeDataset(Dataset):
 # ============================================================
 # Visualize the RAW winning cell + offset (not soft-argmax)
 # ============================================================
-def get_out_gaze_point(pred):
+def get_out_gaze_point(pred, one_frame_only=False):
     """
     pred: [B, 3, 50, 3, 4] (from model output)
     Returns: x_out, y_out (in [0,4) and [0,3)), cell_idx (y_idx, x_idx), max_conf
     """
-    last = pred[:, :, -1]   # [B, 3, 3, 4]
+    if one_frame_only:
+        last = pred              # [B, 3, 3, 4]
+    else:
+        last = pred[:, :, -1]   # [B, 3, 3, 4]
+        
     conf = last[:, 0]       # [B, 3, 4]
 
     B, H, W = conf.shape

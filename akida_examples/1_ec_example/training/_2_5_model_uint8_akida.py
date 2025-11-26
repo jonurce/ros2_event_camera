@@ -15,7 +15,7 @@ class EyeTennSt(nn.Module):
                  n_depthwise_layers=4):
         super().__init__()
 
-        # Channel progression — tuned for 640×480 → fast downsampling
+        # Channel progression — tuned for 128x96 → fast downsampling
         channels = [2, 8, 16, 32, 48, 64, 80, 96, 112, 128, 256] # original
         # channels = [1, 8, 16, 32, 48, 64, 80, 96, 112, 128, 256]  # starts with 1!
         
