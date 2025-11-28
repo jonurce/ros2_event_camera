@@ -68,6 +68,7 @@ try:
     akida_path = AKIDA_FOLDER_PATH / "akida2_int8.fbz"
     akida_model.save(str(akida_path))
     print("Akida SNN model saved → ", akida_path)
+    
 except Exception as e:
     print(f"Model not fully accelerated by Akida. Reason: {str(e)}")
 

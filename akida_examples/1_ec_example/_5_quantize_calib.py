@@ -159,9 +159,6 @@ tf.config.set_visible_devices([], 'GPU')         # ← Extra safety — hide GPU
 # Akida quantization tools
 from quantizeml.models import quantize, QuantizationParams
 from quantizeml import save_model
-# from quantizeml import load_model
-# from quantizeml.layers import QuantizationParams
-# from cnn2snn import convert, quantize, set_akida_version
 
 torch.cuda.empty_cache()
 model = EyeTennSt(t_kernel_size=5, s_kernel_size=3, n_depthwise_layers=4).to("cpu")
