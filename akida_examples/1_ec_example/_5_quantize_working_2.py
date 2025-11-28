@@ -143,6 +143,11 @@ print(f"Tennst PyTorch model → Gaze L2: {tennst_l2:.3f} px | Size: {tennst_siz
 
 
 
+
+
+
+
+
 # ============================================================
 # 2. Load trained PyTorch model in CPU for quantization
 # ============================================================
@@ -210,6 +215,8 @@ print("Output shape:", [x.dim_value or x.dim_param for x in model_onnx.graph.out
 
 
 
+
+
 # ============================================================
 # 4. Calibration dataset (from preprocessed_akida)
 # ============================================================
@@ -242,6 +249,8 @@ print(f"Calibration samples shape after concatenate: {calibration_samples.shape}
 
 
 
+
+
 # ============================================================
 # 5. QUANTIZATION
 # ============================================================
@@ -251,18 +260,24 @@ print("\nQuantizing to 8-bit...")
 qparams_8bit = QuantizationParams(
     input_dtype='int8',
     input_weight_bits=8,
-    weight_bits=8,
-    activation_bits=8,
-    per_tensor_activations=True
+    weight_bits=8, # could be 4 for Akida 1.0
+    activation_bits=8, # could be 4 for Akida 1.0
+    # per_tensor_activations=True
+    # output_bits=8,
+    # buffer_bits=32 (default)
 )
+
+# per_tensor_activations (default False -> per-axis): defines quantization for ReLU activations.
+# Per-axis = more accurate results, but more challenging to calibrate.
+# Akida 1.0 only supports per-tensor activations
 
 model_q8 = quantize(
     model_onnx,
     qparams=qparams_8bit,
-    # samples=calibration_samples,
-    batch_size=BATCH_S,
+    # samples=calibration_samples, # without real samples, it will use [-127, 128] values
+    # num_samples = max_batch_number * BATCH_S, # default = 1024
+    # batch_size=BATCH_S, default = 100
     epochs=1,
-    num_samples = max_batch_number * BATCH_S,
 )
 
 print("8-bit quantization successful!")
@@ -270,6 +285,12 @@ print("8-bit quantization successful!")
 
 # print("\nQuantized model summary (INT8) before saving to ONNX:")
 # model_q8.summary()
+
+# # Convert to Akida SNN model (for Akida 2.0)
+# akida_model_2_0 = cnn2snn.convert(model_q8)
+# akida_model_2_0.summary()
+
+
 
 
 
@@ -283,10 +304,10 @@ print(f"\nQuantized model saved:")
 print(f"  INT8 → {INT8_PATH}")
 
 print("\nVerifying saved INT8 model structure...")
-model_onnx_int8 = onnx.load(str(INT8_PATH))
+model_q8_onnx_int8 = onnx.load(str(INT8_PATH))
 print("Int8 ONNX model loaded")
-print("Input shape:", [x.dim_value or x.dim_param for x in model_onnx_int8.graph.input[0].type.tensor_type.shape.dim])
-print("Output shape:", [x.dim_value or x.dim_param for x in model_onnx_int8.graph.output[0].type.tensor_type.shape.dim])
+print("Input shape:", [x.dim_value or x.dim_param for x in model_q8_onnx_int8.graph.input[0].type.tensor_type.shape.dim])
+print("Output shape:", [x.dim_value or x.dim_param for x in model_q8_onnx_int8.graph.output[0].type.tensor_type.shape.dim])
 
 
 
