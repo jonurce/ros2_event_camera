@@ -19,7 +19,6 @@ N_BINS = 50                    # 50 bins = 500 ms
 H_ORIG, W_ORIG = 480, 640
 H_DOWN, W_DOWN = 96, 128       # Downsampled resolution (5× smaller)
 H_OUT, W_OUT = 3, 4            # Final feature map size after 32× downsampling
-GAUSSIAN_SIGMA = 0.65          # Controls heatmap spread (in downsampled grid units)
 
 DATA_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/event-based-eye-tracking-cvpr-2025/3ET+ dataset/event_data")
 OUTPUT_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_akida")
@@ -119,7 +118,7 @@ def create_heatmap(x_out, y_out):
 # ========================================
 # 4. Preprocess one recording
 # ========================================
-def preprocess_recording(folder, split):
+def preprocess_recording(folder, split, save_root):
     rec_id = folder.name
     h5_file = folder / f"{rec_id}.h5"
     txt_file = folder / "label.txt"
@@ -127,7 +126,7 @@ def preprocess_recording(folder, split):
     if not h5_file.exists() or not txt_file.exists():
         return 0
 
-    out_dir = OUTPUT_ROOT / split / rec_id
+    out_dir = save_root / split / rec_id
     out_dir.mkdir(parents=True, exist_ok=True)
 
     with h5py.File(h5_file, 'r') as f:
@@ -226,7 +225,7 @@ if __name__ == "__main__":
         print(f"\nProcessing {split.upper()} — {len(folders)} recordings")
 
         for folder in tqdm(folders):
-            n = preprocess_recording(folder, split)
+            n = preprocess_recording(folder, split, OUTPUT_ROOT)
             if n > 0:
                 total += n
                 tqdm.write(f"  {folder.name}: {n} samples → voxels.pt + heatmaps.pt")

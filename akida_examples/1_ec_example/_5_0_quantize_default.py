@@ -1,3 +1,5 @@
+
+
 # _5_quantize_akida.py
 # Quantize trained EyeTennSt (Akida-style) → int8 / int4 for Akida SNN conversion
 # Now works with: uint8 [2,50,96,128] input + heatmap [3,50,3,4] output
@@ -11,6 +13,7 @@ import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 import numpy as np
+import time
 from tqdm import tqdm
 import os
 from datetime import datetime
@@ -45,11 +48,11 @@ W, H = 640, 480              # Original input size (pixels)
 W_IN, H_IN = 128, 96         # Model input size (pixels)
 W_OUT, H_OUT = 4, 3          # Output heatmap size (out coordinates)
 
-BATCH_S = 10
-max_batch_number = 5
+BATCH_S = 8
+MAX_BATCH_NUMBER = 10
 
 # Output
-QUANTIZED_FOLDER_PATH = Path("akida_examples/1_ec_example/quantized_models_2")
+QUANTIZED_FOLDER_PATH = Path(f"akida_examples/1_ec_example/quantized_models/q8_default_b{BATCH_S}_n{MAX_BATCH_NUMBER}")
 QUANTIZED_FOLDER_PATH.mkdir(exist_ok=True)
 
 print(f"Loading model from: {MODEL_PATH}")
@@ -64,9 +67,10 @@ print(f"Using calibration data from: {DATA_ROOT/'train'}")
 # 0. Load trained PyTorch model in GPU for evaluation
 # ============================================================
 
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+DEVICE = "cpu"
 
-torch.cuda.empty_cache()
+# torch.cuda.empty_cache()
 model = EyeTennSt(t_kernel_size=5, s_kernel_size=3, n_depthwise_layers=4).to(DEVICE)
 
 checkpoint = torch.load(MODEL_PATH, map_location=DEVICE)
@@ -88,7 +92,7 @@ else:
     model.state_dict(state_dict)
 
 model.eval()
-print("PyTorch model loaded on GPU for evaluation")
+print(f"PyTorch model loaded on {DEVICE} for evaluation")
 
 
 
@@ -122,23 +126,51 @@ def get_model_size(path):
 print("\nEvaluating original tennst PyTorch model...")
 model.to(DEVICE)
 model.eval()
+
 tennst_l2 = 0.0
 samples = 0
+tennst_model_time_ms = 0.0
+tennst_time_ms = 0.0
+
 with torch.no_grad():
-    for batch in tqdm(test_loader, desc="Tennst baseline", leave=False):
-        x = batch['input'].to(DEVICE)
-        y = batch['target'].to(DEVICE)
-        with torch.amp.autocast('cuda'):
-            pred = model(x)
+    for i, batch in enumerate(tqdm(test_loader, desc="Tennst", total=MAX_BATCH_NUMBER)):
+        if i >= MAX_BATCH_NUMBER:
+            break
+        x = batch['input'].to(DEVICE)      # [B,2,50,96,128] uint8
+        y = batch['target'].to(DEVICE)     # [B,3,50,3,4] float32
+
+        # Inference
+        start = time.time()
+        # with torch.amp.autocast('cuda'):
+        #    pred = model(x)
+        pred = model(x)
+        latency_ms = (time.time() - start) * 1000
+
         pred_x, pred_y, _, _ = get_out_gaze_point(pred)
+        pred_px = pred_x * W / W_OUT
+        pred_py = pred_y * H / H_OUT
+        total_latency_ms = (time.time() - start) * 1000
+
         gt_x,   gt_y,   _, _ = get_out_gaze_point(y)
-        error_l2 = torch.sqrt(( (pred_x - gt_x) * W / W_OUT )**2 + ( (pred_y - gt_y) * H / H_OUT )**2).mean()
+        gt_px   = gt_x   * W / W_OUT
+        gt_py   = gt_y   * H / H_OUT
+
+        # L2 error
+        error_l2 = torch.sqrt((pred_px - gt_px)**2 + (pred_py - gt_py)**2).mean()
+
+        # Accumulate results
         tennst_l2 += error_l2.item()
         samples += x.size(0)
+        tennst_model_time_ms += latency_ms
+        tennst_time_ms += total_latency_ms
+
 tennst_l2 /= samples
 tennst_size_str = get_model_size(MODEL_PATH)
+tennst_model_time_ms /= samples
+tennst_time_ms /= samples
+
 print("\nTennst PyTorch model evaluation complete:")
-print(f"Tennst PyTorch model → Gaze L2: {tennst_l2:.3f} px | Size: {tennst_size_str}")
+print(f"Tennst PyTorch model → Gaze L2: {tennst_l2:.3f} px | Size: {tennst_size_str} | Model Latency: {tennst_model_time_ms:.2f} ms | Total Latency: {tennst_time_ms:.2f} ms")
 
 
 
@@ -215,42 +247,9 @@ print("Output shape:", [x.dim_value or x.dim_param for x in model_onnx.graph.out
 
 
 # ============================================================
-# 4. Calibration dataset (from preprocessed_akida)
-# ============================================================
-
-calib_dataset = AkidaGazeDataset(split="train")
-calib_loader = DataLoader(calib_dataset, batch_size=BATCH_S, shuffle=True, num_workers=8, pin_memory=True)
-
-calibration_samples = []
-print("Collecting calibration samples (float32 voxels)...")
-for i, batch in enumerate(tqdm(calib_loader, total=max_batch_number)):
-    if i >= max_batch_number:
-        break
-    x = batch['input'].numpy()  # [B, 2, 50, 96, 128]
-    # Add each sample individually as [C,T,H,W] → shape (2,50,96,128)
-    for sample in x:
-        calibration_samples.append(np.array(sample))   # ← one sample at a time
-
-# Should be = max_batch_number * BATCH_S
-print("\nShould have collected:", max_batch_number * BATCH_S, "samples")
-print(f"Collected {len(calibration_samples)} calibration samples -> shape per sample: {calibration_samples[0].shape}")
-
-calibration_samples = np.array(calibration_samples) 
-print(f"calibration_samples.shape = {calibration_samples.shape}")
-
-calibration_samples = np.concatenate(calibration_samples, axis=0)
-print(f"Calibration samples shape after concatenate: {calibration_samples.shape}")
-
-
-
-
-
-
-
-
-# ============================================================
 # 5. QUANTIZATION
 # ============================================================
+
 
 print("\nQuantizing to 8-bit...")
 
@@ -274,18 +273,13 @@ model_q8 = quantize(
     # samples=calibration_samples, # without real samples, it will use [-127, 128] values
     # num_samples = max_batch_number * BATCH_S, # default = 1024
     # batch_size=BATCH_S, default = 100
-    epochs=1,
+    # epochs=1,
 )
 
 print("8-bit quantization successful!")
 
 
-# print("\nQuantized model summary (INT8) before saving to ONNX:")
-# model_q8.summary()
 
-# # Convert to Akida SNN model (for Akida 2.0)
-# akida_model_2_0 = cnn2snn.convert(model_q8)
-# akida_model_2_0.summary()
 
 
 
@@ -310,6 +304,10 @@ print("Output shape:", [x.dim_value or x.dim_param for x in model_q8_onnx_int8.g
 
 
 
+
+
+
+
 # ============================================================
 # 7. Evaluation on test set (using out cell + offset → real px)
 # ============================================================
@@ -317,6 +315,7 @@ print("Output shape:", [x.dim_value or x.dim_param for x in model_q8_onnx_int8.g
 from onnxruntime import InferenceSession, SessionOptions
 from onnxruntime_extensions import get_library_path
 from quantizeml.onnx_support.quantization import ONNXModel
+from quantizeml.models import reset_buffers
 
 print("\n" + "="*70)
 print("EVALUATING QUANTIZED MODEL (Gaze L2 in original pixels)")
@@ -345,9 +344,11 @@ def evaluate_model(model_q, model_path, name):
 
     total_error_px = 0.0
     total_samples = 0
+    total_q8_model_time_ms = 0.0
+    total_q8_time_ms = 0.0
 
-    for i, batch in enumerate(tqdm(test_loader, total=max_batch_number)):
-        if i >= max_batch_number:
+    for i, batch in enumerate(tqdm(test_loader, total=MAX_BATCH_NUMBER)):
+        if i >= MAX_BATCH_NUMBER:
             break
         for frame_idx in range(batch['input'].shape[2]):
             # batch['input'] -> [B,2,50,96,128] uint8 
@@ -357,7 +358,9 @@ def evaluate_model(model_q, model_path, name):
             target = batch['target'][:, :, frame_idx, ...].numpy()        # [B,3,3,4] float32
 
             # Inference
+            start = time.time()
             pred = session.run(None, {model_quant.input[0].name: x_np})[0] # [B,3,3,4]
+            latency_ms = (time.time() - start) * 1000
 
             # Convert to torch for get_out_gaze_point
             pred_t = torch.from_numpy(pred)
@@ -373,17 +376,31 @@ def evaluate_model(model_q, model_path, name):
             gt_px   = gt_x   * W / W_OUT
             gt_py   = gt_y   * H / H_OUT
 
+            total_latency_ms = (time.time() - start) * 1000
+
             error_l2_px = torch.sqrt((pred_px - gt_px)**2 + (pred_py - gt_py)**2).mean()
             total_error_px += error_l2_px.item()
             total_samples += x_np.shape[0]
+            total_q8_model_time_ms += latency_ms
+            total_q8_time_ms += total_latency_ms
+        
+        # Reset FIFOs between each file
+        reset_buffers(model_quant)
 
     avg_error_l2_px = total_error_px / (total_samples or 1)
     size_str = format_size(os.path.getsize(model_path)) if model_path.exists() else "N/A"
-    return {"name": name, "l2": avg_error_l2_px, "size_str": size_str, "samples": total_samples}
+    q8_latency_ms = total_q8_model_time_ms / total_samples
+    q8_total_latency_ms = total_q8_time_ms / total_samples
+    return {"name": name, "l2": avg_error_l2_px, "size_str": size_str,
+            "samples": total_samples, "model_latency_ms": q8_latency_ms,
+            "total_latency_ms": q8_total_latency_ms}
 
 print("\nEvaluating quantized INT8 model...")
 int8_res = evaluate_model(model_q8, INT8_PATH, "INT8")
-print(f"INT8 → {int8_res['l2']:.3f} px | Size: {int8_res['size_str']}")
+print(f"INT8 → {int8_res['l2']:.3f} px | Size: {int8_res['size_str']} | Model Latency: {int8_res['model_latency_ms']:.2f} ms | Total Latency: {int8_res['total_latency_ms']:.2f} ms")
+
+
+
 
 
 
@@ -395,17 +412,21 @@ print(f"INT8 → {int8_res['l2']:.3f} px | Size: {int8_res['size_str']}")
 print("\n" + "="*85)
 print("FINAL QUANTIZATION RESULTS — Gaze L2 Error (pixels) + Model Size")
 print("="*85)
-print(f"{'Model':<12} {'Gaze L2 (px)':>18} {'Δ vs Tennst':>16} {'Size':>15} {'Reduction':>12}")
+print(f"{'Model':<12} {'Gaze L2 (px)':>18} {'Δ(px) vs Tennst':>16} {'Size':>15} {'Reduction':>12} {'Model Lat(ms)':>15} {'Δ(%) vs Tennst':>16} {'Total Lat(ms)':>15} {'Δ(%) vs Tennst':>16}")
 print("-"*85)
 
 # Tennst baseline
-print(f"{'Tennst':<12} {tennst_l2:18.3f} {'-':>16} {tennst_size_str:>15} {'-':>12}")
+print(f"{'Tennst':<12} {tennst_l2:18.3f} {'N/A':>16} {tennst_size_str:>15} {'N/A':>12} {tennst_model_time_ms:>15.2f} {'N/A':>16} {tennst_time_ms:>15.2f} {'N/A':>16}")
 
 # INT8
 delta_l2 = int8_res['l2'] - tennst_l2
 reduction_8 = "N/A" if tennst_size_str == "N/A" or int8_res['size_str'] == "N/A" else \
     f"{(1 - os.path.getsize(INT8_PATH) / MODEL_PATH.stat().st_size)*100:5.1f}%"
-print(f"{'INT8':<12} {int8_res['l2']:18.3f} {delta_l2:+8.3f} px {int8_res['size_str']:>15} {reduction_8:>14}")
+delta_model_lat_8 = "N/A" if tennst_model_time_ms == 0 or int8_res['model_latency_ms'] == 0 else \
+    ( int8_res['model_latency_ms'] - tennst_model_time_ms ) / tennst_model_time_ms
+delta_total_lat_8 = "N/A" if tennst_time_ms == 0 or int8_res['total_latency_ms'] == 0 else \
+    ( int8_res['total_latency_ms'] - tennst_time_ms ) / tennst_time_ms
+print(f"{'Q_INT8':<12} {int8_res['l2']:18.3f} {delta_l2:+8.3f} px {int8_res['size_str']:>15} {reduction_8:>14} {int8_res['model_latency_ms']:>15.2f} {delta_model_lat_8:+15.2%} {int8_res['total_latency_ms']:>15.2f} {delta_total_lat_8:+15.2%}")
 
 print("-"*85)
 print(f"Total test samples: {samples:,}")
@@ -423,16 +444,20 @@ print("="*85)
 # ============================================================
 summary_path = QUANTIZED_FOLDER_PATH / "quantization_report.txt"
 with open(summary_path, "w") as f:
-    f.write("Akida-Style EyeTennSt Quantization Report\n")
+    f.write("Quantization Report\n")
     f.write("="*65 + "\n")
-    f.write(f"{'Model':<12} {'Gaze L2 (px)':>15} {'Δ vs Tennst':>15} {'Size':>15} {'Reduction':>12}\n")
+    f.write(f"{'Model':<12} {'Gaze L2 (px)':>15} {'Δ(px) vs Tennst':>15} {'Size':>15} {'Reduction':>12} {'Model Lat(ms)':>15} {'Δ(%) vs Tennst':>16} {'Total Lat(ms)':>15} {'Δ(%) vs Tennst':>16} \n")
     f.write("-"*65 + "\n")
     
-    f.write(f"{'Tennst':<12} {tennst_l2:15.3f} {'-':>15} {tennst_size_str:>15} {'-':>12}\n")
+    f.write(f"{'Tennst':<12} {tennst_l2:15.3f} {'N/A':>15} {tennst_size_str:>15} {'N/A':>12} {tennst_model_time_ms:>15.2f} {'N/A':>16} {tennst_time_ms:>15.2f} {'N/A':>16}\n")
     
     delta8 = int8_res['l2'] - tennst_l2
-    red8 = "N/A" if tennst_size_str == "N/A" else f"{(1 - os.path.getsize(INT8_PATH) / MODEL_PATH.stat().st_size)*100:5.1f}%"
-    f.write(f"{'INT8':<12} {int8_res['l2']:15.3f} {delta8:+8.3f} px {int8_res['size_str']:>15} {red8:>12}\n")
+    red8 = "N/A" if tennst_size_str == "N/A" or int8_res['size_str'] == "N/A" else f"{(1 - os.path.getsize(INT8_PATH) / MODEL_PATH.stat().st_size)*100:5.1f}%"
+    delta_model_lat_8 = "N/A" if tennst_model_time_ms == 0 or int8_res['model_latency_ms'] == 0 else \
+        ( int8_res['model_latency_ms'] - tennst_model_time_ms ) / tennst_model_time_ms
+    delta_total_lat_8 = "N/A" if tennst_time_ms == 0 or int8_res['total_latency_ms'] == 0 else \
+        ( int8_res['total_latency_ms'] - tennst_time_ms ) / tennst_time_ms
+    f.write(f"{'Q_INT8':<12} {int8_res['l2']:15.3f} {delta8:+8.3f} px {int8_res['size_str']:>15} {red8:>12} {int8_res['model_latency_ms']:>15.2f} {delta_model_lat_8:+15.2%} {int8_res['total_latency_ms']:>15.2f} {delta_total_lat_8:+15.2%}\n")
     
     f.write("-"*65 + "\n")
     f.write(f"Test samples: {samples:,}\n")

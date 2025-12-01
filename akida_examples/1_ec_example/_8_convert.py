@@ -28,9 +28,10 @@ W_IN, H_IN = 128, 96         # Model input size (pixels)
 W_OUT, H_OUT = 4, 3          # Output heatmap size (out coordinates)
 
 
-QUANTIZED_FOLDER_PATH = Path("akida_examples/1_ec_example/quantized_models_2")
+QUANTIZED_FOLDER_PATH = Path("akida_examples/1_ec_example/quantized_models/q8_calib_b8_n10")
 Q_INT8_PATH = QUANTIZED_FOLDER_PATH / "q_tennst_int8.onnx"
-AKIDA_FOLDER_PATH = Path("akida_examples/1_ec_example/akida_models")
+
+AKIDA_FOLDER_PATH = QUANTIZED_FOLDER_PATH / "akida_models"
 AKIDA_FOLDER_PATH.mkdir(exist_ok=True)
 
 

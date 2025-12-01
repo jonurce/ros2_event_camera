@@ -4,6 +4,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent / "training"))
 from training._3_4_train_fast_akida import get_out_gaze_point, AkidaGazeDataset
 import numpy as np
+import time
 import torch
 import os
 import tensorflow as tf
@@ -30,6 +31,8 @@ W, H = 640, 480              # Original input size (pixels)
 W_IN, H_IN = 128, 96         # Model input size (pixels)
 W_OUT, H_OUT = 4, 3          # Output heatmap size (out coordinates)
 
+BATCH_SIZE = 8
+
 
 
 
@@ -41,7 +44,6 @@ W_OUT, H_OUT = 4, 3          # Output heatmap size (out coordinates)
 AKIDA_FOLDER_PATH = Path("akida_examples/1_ec_example/akida_models")
 akida_path = AKIDA_FOLDER_PATH / "akida2_int8.fbz"
 akida_model = akida.Model(str(akida_path))
-# akida_model = cnn2snn.load_akida_model(str(akida_path))
 print("\nLoaded Akida SNN model:")
 akida_model.summary()
 
@@ -93,10 +95,12 @@ print(f"Gaze: ({gaze_x[-1]:.1f}, {gaze_y[-1]:.1f}) px | Confidence: {conf[-1]:.3
 # print(f'Akida model accuracy: {100 * akida_accuracy:.2f} %')
 
 test_dataset = AkidaGazeDataset(split="test")
-test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False, num_workers=4)
+test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=4)
 
 total_error_px = 0.0
 total_samples = 0
+total_model_time_ms = 0.0
+total_time_ms = 0.0
 
 print("\nEvaluating Akida SNN on test set...")
 pbar = tqdm(test_loader, desc="Akida SNN Eval", leave=True)
@@ -112,29 +116,46 @@ for batch in pbar:
     target = batch['target'][:, :, -1, :, :].numpy()  # [B, C=3, H=3, W=4]
 
     # Akida inference
+    start = time.time()
     pred = akida_model.predict(x)          # [B, H=3, W=4, C=3]
+    latency_ms = (time.time() - start) * 1000
 
     # Convert to torch for your gaze function
     pred_t = torch.from_numpy(pred)
     pred_t = pred_t.permute(0, 3, 1, 2)    # [B, C=3, H=3, W=4]
-    targ_t = torch.from_numpy(target)
-
-    pred_x, pred_y, _, _ = get_out_gaze_point(pred_t, one_frame_only=True)
-    gt_x,   gt_y,   _, _ = get_out_gaze_point(targ_t, one_frame_only=True)
-
+    
     # Convert to pixels
+    pred_x, pred_y, _, _ = get_out_gaze_point(pred_t, one_frame_only=True)
     pred_px = pred_x * W / W_OUT
     pred_py = pred_y * H / H_OUT
+
+    total_latency_ms = (time.time() - start) * 1000
+
+    # Convert to pixels
+    targ_t = torch.from_numpy(target)
+    gt_x,   gt_y,   _, _ = get_out_gaze_point(targ_t, one_frame_only=True)
     gt_px   = gt_x   * W / W_OUT
     gt_py   = gt_y   * H / H_OUT
 
     # L2 error
-    error_l2 = torch.sqrt((pred_px - gt_px)**2 + (pred_py - gt_py)**2)
-    total_error_px += error_l2.sum().item()
-    total_samples += error_l2.shape[0]
+    error_l2 = torch.sqrt((pred_px - gt_px)**2 + (pred_py - gt_py)**2).mean()
 
-    pbar.set_postfix({"L2": total_error_px / total_samples})
+    # Accumulate results
+    total_error_px += error_l2.sum().item()
+    total_samples += x.shape[0]
+    total_model_time_ms += latency_ms
+    total_time_ms += total_latency_ms
+
+    pbar.set_postfix({"L2": total_error_px / total_samples ,
+                      "Model Lat(ms)": f"{total_model_time_ms / total_samples:.2f}",
+                      "Total Lat(ms)": f"{total_time_ms / total_samples:.2f}"})
 
 # Final result
 akida_l2 = total_error_px / total_samples
-print(f"\nAKIDA SNN FINAL RESULT → Gaze L2 Error: {akida_l2:.3f} px on {total_samples} samples")
+akida_latency_ms = total_model_time_ms / total_samples
+akida_total_latency_ms = total_time_ms / total_samples
+print(f"\nAKIDA SNN FINAL RESULTS")
+print(f"Total samples: {total_samples}")
+print(f"Average L2 error: {akida_l2:.2f} px")
+print(f"Average Model latency (ms): {akida_latency_ms:.2f} ms → {1000/akida_latency_ms:.0f} FPS")
+print(f"Average Total latency (ms): {akida_total_latency_ms:.2f} ms → {1000/akida_total_latency_ms:.0f} FPS")

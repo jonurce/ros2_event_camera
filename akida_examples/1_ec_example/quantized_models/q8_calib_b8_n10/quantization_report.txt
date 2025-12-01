@@ -1,0 +1,11 @@
+Quantization Report
+=================================================================
+Model           Gaze L2 (px) Δ(px) vs Tennst            Size    Reduction   Model Lat(ms)   Δ(%) vs Tennst   Total Lat(ms)   Δ(%) vs Tennst 
+-----------------------------------------------------------------
+Tennst                22.856             N/A          12.3MB          N/A          451.48              N/A          451.53              N/A
+Q_INT8                 3.741  -19.115 px           1.1MB        91.4%           73.08         -83.81%           73.15         -83.80%
+-----------------------------------------------------------------
+Test samples: 80
+Original model: /home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_11_akida_b128_e100/best.pth (12.3MB)
+Quantized folder: akida_examples/1_ec_example/quantized_models/q8_calib_b8_n10
+Generated: 2025-11-28 16:52:33

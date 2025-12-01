@@ -35,6 +35,8 @@ W, H = 640, 480              # Original input size (pixels)
 W_IN, H_IN = 128, 96         # Model input size (pixels)
 W_OUT, H_OUT = 4, 3          # Output heatmap size (out coordinates)
 
+BATCH_SIZE = 8
+
 
 
 
@@ -79,11 +81,6 @@ print("Model mapped to hardware — ready for ultra-low power inference")
 # ============================================================
 
 
-
-
-
-
-
 print(f"Hardware inference: {latency_ms:.2f} ms → {1000/latency_ms:.0f} FPS")
 print(f"Power: ~8–15 mW total system")
 
@@ -98,11 +95,14 @@ print(f"GAZE → ({gaze_x:.1f}, {gaze_y:.1f}) px")
 
 
 
+
+
 test_dataset = AkidaGazeDataset(split="test")
-test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False, num_workers=4)
+test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=4)
 
 total_error_px = 0.0
 total_samples = 0
+total_model_time_ms = 0.0
 total_time_ms = 0.0
 
 print("\nEvaluating Akida SNN on test set...")
@@ -126,31 +126,39 @@ for batch in pbar:
     # Convert to torch for your gaze function
     pred_t = torch.from_numpy(pred)
     pred_t = pred_t.permute(0, 3, 1, 2)    # [B, C=3, H=3, W=4]
-    targ_t = torch.from_numpy(target)
-
-    pred_x, pred_y, _, _ = get_out_gaze_point(pred_t, one_frame_only=True)
-    gt_x,   gt_y,   _, _ = get_out_gaze_point(targ_t, one_frame_only=True)
 
     # Convert to pixels
+    pred_x, pred_y, _, _ = get_out_gaze_point(pred_t, one_frame_only=True)
     pred_px = pred_x * W / W_OUT
     pred_py = pred_y * H / H_OUT
+    
+    total_latency_ms = (time.time() - start) * 1000
+
+    # Convert to pixels
+    targ_t = torch.from_numpy(target)
+    gt_x,   gt_y,   _, _ = get_out_gaze_point(targ_t, one_frame_only=True)
     gt_px   = gt_x   * W / W_OUT
     gt_py   = gt_y   * H / H_OUT
 
     # L2 error
-    error_l2 = torch.sqrt((pred_px - gt_px)**2 + (pred_py - gt_py)**2)
+    error_l2 = torch.sqrt((pred_px - gt_px)**2 + (pred_py - gt_py)**2).mean()
 
     # Accumulate results
     total_error_px += error_l2.sum().item()
-    total_samples += error_l2.shape[0]
-    total_time_ms += latency_ms
+    total_samples += x.shape[0]
+    total_model_time_ms += latency_ms
+    total_time_ms += total_latency_ms
 
-    pbar.set_postfix({"L2": total_error_px / total_samples , "Lat(ms)": f"{total_time_ms / total_samples:.2f}"})
+    pbar.set_postfix({"L2": total_error_px / total_samples ,
+                      "Model Lat(ms)": f"{total_model_time_ms / total_samples:.2f}",
+                      "Total Lat(ms)": f"{total_time_ms / total_samples:.2f}"})
 
 # Final result
 akida_l2 = total_error_px / total_samples
-akida_latency_ms = total_time_ms / total_samples
+akida_latency_ms = total_model_time_ms / total_samples
+akida_total_latency_ms = total_time_ms / total_samples
 print(f"\nAKIDA SNN FINAL RESULTS")
 print(f"Total samples: {total_samples}")
 print(f"Average L2 error: {akida_l2:.2f} px")
-print(f"Average latency: {akida_latency_ms:.2f} ms → {1000/akida_latency_ms:.0f} FPS")
+print(f"Average Model latency (ms): {akida_latency_ms:.2f} ms → {1000/akida_latency_ms:.0f} FPS")
+print(f"Average Total latency (ms): {akida_total_latency_ms:.2f} ms → {1000/akida_total_latency_ms:.0f} FPS")
