@@ -12,6 +12,7 @@ tf.config.set_visible_devices([], 'GPU')         # ← Extra safety — hide GPU
 
 
 import cnn2snn
+from cnn2snn import get_akida_version, set_akida_version, AkidaVersion
 
 
 
@@ -30,6 +31,7 @@ W_OUT, H_OUT = 4, 3          # Output heatmap size (out coordinates)
 
 QUANTIZED_FOLDER_PATH = Path("akida_examples/1_ec_example/quantized_models/q8_calib_b8_n10")
 Q_INT8_PATH = QUANTIZED_FOLDER_PATH / "q_tennst_int8.onnx"
+TENNST_PATH = QUANTIZED_FOLDER_PATH / "tennst.onnx"
 
 AKIDA_FOLDER_PATH = QUANTIZED_FOLDER_PATH / "akida_models"
 AKIDA_FOLDER_PATH.mkdir(exist_ok=True)
@@ -63,21 +65,37 @@ print("Output shape:", [x.dim_value or x.dim_param for x in model_q8_onnx_int8.g
 # ============================================================
 
 print("Checking cnn2snn Akida Version")
-current_version = cnn2snn.get_akida_version()
-print(f'Current version: {current_version}')
-cnn2snn.set_akida_version(cnn2snn.AkidaVersion.v2)
-updated_version = cnn2snn.get_akida_version()
-print(f'Current version: {updated_version}')
+
+# current_version = cnn2snn.get_akida_version()
+# print(f'Current version: {current_version}')
+
+# cnn2snn.set_akida_version(cnn2snn.AkidaVersion.v1)
+# cnn2snn.set_akida_version(version=cnn2snn.AkidaVersion.v1)
+target_version=AkidaVersion.v1
+set_akida_version(target_version)
+updated_version = get_akida_version()
+print(f'Target version: {target_version} \n')
+print(f'Updated version: {updated_version} \n')
+exit()
+
+
+
 
 print("Checking model compatibility for Akida 2.0...")
-# compatibility = cnn2snn.check_model_compatibility(Q_INT8_PATH, target_akida_version=2)
-compatibility = cnn2snn.check_model_compatibility(model_q8_onnx_int8)
-if compatibility['overall'] != 'compatible':
-    print("WARNING: Model has issues. Fix quantization/conversion params and retry.")
-    print(compatibility)  # Shows details
-    exit(1)
-else:
-    print("Model is compatible with Akida 2.0!")
+model_tennst_onnx = onnx.load(str(TENNST_PATH))
+
+from akida import devices 
+detected_device = devices()[0]
+
+# compatibility = cnn2snn.check_model_compatibility(model_q8_onnx_int8, device=detected_device, input_dtype="uint8")
+# compatibility = cnn2snn.check_model_compatibility(model_q8_onnx_int8)
+
+# if compatibility['overall'] != 'compatible':
+#     print("WARNING: Model has issues. Fix quantization/conversion params and retry.")
+#     print(compatibility)  # Shows details
+#     exit(1)
+# else:
+#     print("Model is compatible with Akida 2.0!")
 
 
 
@@ -96,10 +114,12 @@ print("Converting to Akida 2.0...")
 # Convert to Akida SNN model (for Akida 2.0)
 try:
     # akida_model = cnn2snn.convert(model_q8_onnx_int8, target_akida_version=2)
-    akida_model = cnn2snn.convert(model_q8_onnx_int8)
-    akida_model.summary()
+    # cnn2snn.set_akida_version(cnn2snn.AkidaVersion.v1)
+    # akida_model = cnn2snn.convert(model_q8_onnx_int8)
+    akida_model = target_version.convert(model_q8_onnx_int8)
+    # akida_model.summary()
 
-    akida_path = AKIDA_FOLDER_PATH / "akida2_int8_v2.fbz"
+    akida_path = AKIDA_FOLDER_PATH / "akida_int8_v1.fbz"
     akida_model.save(str(akida_path))
     print("Akida SNN model saved → ", akida_path)
     

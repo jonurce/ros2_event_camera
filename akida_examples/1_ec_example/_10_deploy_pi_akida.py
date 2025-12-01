@@ -48,7 +48,7 @@ BATCH_SIZE = 8
 
 from akida import Model
 AKIDA_FOLDER_PATH = Path("akida_examples/1_ec_example/quantized_models/q8_calib_b8_n10/akida_models")
-AKIDA_PATH = AKIDA_FOLDER_PATH / "akida2_int8.fbz"
+AKIDA_PATH = AKIDA_FOLDER_PATH / "akida_int8_v1.fbz"
 akida_model = Model(str(AKIDA_PATH)) # important! load model from akida
 print("\nLoaded Akida SNN model")
 #akida_model.summary()
