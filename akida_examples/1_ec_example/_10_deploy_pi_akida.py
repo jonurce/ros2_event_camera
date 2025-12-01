@@ -12,7 +12,7 @@ import onnx
 from torch.utils.data import DataLoader 
 from tqdm import tqdm
 
-# Disable GPU for TF (quantizeml) -> FORCE quantizeml TO RUN ON CPU
+# Disable GPU for TF (quantizeml) -> FORCE quantizeml TO RUN ON CPU  
 os.environ["CUDA_VISIBLE_DEVICES"] = ""          # ← Disable GPU completely for TF/quantizeml
 tf.config.set_visible_devices([], 'GPU')         # ← Extra safety — hide GPU from TF
 
