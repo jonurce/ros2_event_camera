@@ -61,7 +61,7 @@ print("\nLoaded Akida SNN model")
 # MAP MODEL TO REAL AKIDA HARDWARE
 # ============================================================
 
-from akida import devices, Mapper
+from akida import devices, Mapper 
 
 # Detect real hardware
 device = devices()[0]              # takes first available AKD1000/1500/PCIe
