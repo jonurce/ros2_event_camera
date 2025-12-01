@@ -44,7 +44,6 @@ AKIDA_FOLDER_PATH.mkdir(exist_ok=True)
 # LOAD & VERIFY SAVED QUANTIZED INT8 MODEL
 # ============================================================
 
-
 print("\nVerifying saved INT8 model structure...")
 model_q8_onnx_int8 = onnx.load(str(Q_INT8_PATH))
 print("Int8 ONNX model loaded")
@@ -57,16 +56,50 @@ print("Output shape:", [x.dim_value or x.dim_param for x in model_q8_onnx_int8.g
 
 
 
+
+
 # ============================================================
-# CONVERTION TO AKIDA SNN MODEL AND SAVE
+# CHECK COMPATIBILITY FOR AKIDA 2.0
 # ============================================================
 
+print("Checking cnn2snn Akida Version")
+current_version = cnn2snn.get_akida_version()
+print(f'Current version: {current_version}')
+cnn2snn.set_akida_version(cnn2snn.AkidaVersion.v2)
+updated_version = cnn2snn.get_akida_version()
+print(f'Current version: {updated_version}')
+
+print("Checking model compatibility for Akida 2.0...")
+# compatibility = cnn2snn.check_model_compatibility(Q_INT8_PATH, target_akida_version=2)
+compatibility = cnn2snn.check_model_compatibility(model_q8_onnx_int8)
+if compatibility['overall'] != 'compatible':
+    print("WARNING: Model has issues. Fix quantization/conversion params and retry.")
+    print(compatibility)  # Shows details
+    exit(1)
+else:
+    print("Model is compatible with Akida 2.0!")
+
+
+
+
+
+
+
+
+
+
+# ============================================================
+# CONVERTION TO AKIDA 2.0 SNN MODEL AND SAVE
+# ============================================================
+
+print("Converting to Akida 2.0...")
 # Convert to Akida SNN model (for Akida 2.0)
 try:
+    # akida_model = cnn2snn.convert(model_q8_onnx_int8, target_akida_version=2)
     akida_model = cnn2snn.convert(model_q8_onnx_int8)
     akida_model.summary()
 
-    akida_path = AKIDA_FOLDER_PATH / "akida2_int8.fbz"
+    akida_path = AKIDA_FOLDER_PATH / "akida2_int8_v2.fbz"
     akida_model.save(str(akida_path))
     print("Akida SNN model saved → ", akida_path)
     

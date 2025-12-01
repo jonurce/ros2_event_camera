@@ -20,8 +20,10 @@ H_ORIG, W_ORIG = 480, 640
 H_DOWN, W_DOWN = 96, 128       # Downsampled resolution (5× smaller)
 H_OUT, W_OUT = 3, 4            # Final feature map size after 32× downsampling
 
-DATA_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/event-based-eye-tracking-cvpr-2025/3ET+ dataset/event_data")
-OUTPUT_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_akida")
+# DATA_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/event-based-eye-tracking-cvpr-2025/3ET+ dataset/event_data")
+# OUTPUT_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_akida")
+DATA_ROOT = Path("/home/pi/Jon/IndustrialProject/akida_examples/1_ec_example/training/event-based-eye-tracking-cvpr-2025/3ET+ dataset/event_data")
+OUTPUT_ROOT = Path("/home/pi/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_akida")
 OUTPUT_ROOT.mkdir(exist_ok=True)
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")

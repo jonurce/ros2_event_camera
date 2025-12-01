@@ -41,8 +41,10 @@ LEARNING_RATE = 0.002
 WEIGHT_DECAY = 0.005
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-DATA_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_akida")
-LOG_DIR = Path(f"/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_12_akida_b{BATCH_SIZE}_e{NUM_EPOCHS}")
+# DATA_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_akida")
+# LOG_DIR = Path(f"/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_12_akida_b{BATCH_SIZE}_e{NUM_EPOCHS}")
+DATA_ROOT = Path("/home/pi/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_akida")
+LOG_DIR = Path(f"/home/pi/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_12_akida_b{BATCH_SIZE}_e{NUM_EPOCHS}")
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 LOG_FILE = LOG_DIR / f"training_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
 
@@ -62,11 +64,11 @@ print(f"Training Akida-exact model | Device: {DEVICE} | Batch: {BATCH_SIZE}")
 # DATASET — loads uint8 voxels + float32 heatmaps
 # ================================================
 class AkidaGazeDataset(Dataset):
-    def __init__(self, split="train"):
+    def __init__(self, split="train", data_root=DATA_ROOT):
         # list of samples (recording_dir, frame_index)
         self.samples = []
 
-        split_path = DATA_ROOT / split
+        split_path = data_root / split
 
         for rec_dir in sorted(split_path.iterdir()):
             if not rec_dir.is_dir():

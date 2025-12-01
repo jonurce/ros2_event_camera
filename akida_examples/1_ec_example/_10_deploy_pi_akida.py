@@ -4,7 +4,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent / "training"))
 from training._3_4_train_fast_akida import get_out_gaze_point, AkidaGazeDataset
 import numpy as np
-import time
+import time, datetime
 import torch
 import os
 import tensorflow as tf
@@ -46,9 +46,10 @@ BATCH_SIZE = 8
 # LOAD SAVED SNN INT8 MODEL
 # ============================================================
 
-AKIDA_FOLDER_PATH = Path("akida_examples/1_ec_example/akida_models")
-akida_path = AKIDA_FOLDER_PATH / "akida2_int8.fbz"
-akida_model = akida.Model(str(akida_path))
+from akida import Model
+AKIDA_FOLDER_PATH = Path("akida_examples/1_ec_example/quantized_models/q8_calib_b8_n10/akida_models")
+AKIDA_PATH = AKIDA_FOLDER_PATH / "akida2_int8.fbz"
+akida_model = Model(str(AKIDA_PATH)) # important! load model from akida
 print("\nLoaded Akida SNN model")
 #akida_model.summary()
 
@@ -61,15 +62,23 @@ print("\nLoaded Akida SNN model")
 # MAP MODEL TO REAL AKIDA HARDWARE
 # ============================================================
 
-from akida import devices, Mapper 
+from akida import devices 
 
 # Detect real hardware
-device = devices()[0]              # takes first available AKD1000/1500/PCIe
-print(f"Found Akida device: {device}")
+detected_device = devices()[0]  # important! takes first available AKD1000/1500/PCIe
+print(f"Found Akida device: {detected_device}")
+print(f"Akida device version: {detected_device.version}")
 
 # Map your saved model to hardware
-mapped_model = Mapper.map(akida_model)     # ← critical step
+# akida.MapMode(2) # AllNps = 1 (default) / HwPr = 2 / Minimal = 3
+# akida.MapConstraints(device=detected_device)
+
+akida_model.map(detected_device)     # important! map model to NSOC
 print("Model mapped to hardware — ready for ultra-low power inference")
+# akida_model.summary()
+exit()
+
+device.soc.power_measurement_enabled = True
 
 
 
@@ -80,24 +89,8 @@ print("Model mapped to hardware — ready for ultra-low power inference")
 # RUN INFERENCE ON REAL AKIDA HARDWARE
 # ============================================================
 
-
-print(f"Hardware inference: {latency_ms:.2f} ms → {1000/latency_ms:.0f} FPS")
-print(f"Power: ~8–15 mW total system")
-
-# Convert to gaze point
-pred_x, pred_y, _, _ = get_out_gaze_point(torch.from_numpy(potentials), one_frame_only=True)
-gaze_x = pred_x * 640 / 4
-gaze_y = pred_y * 480 / 3
-print(f"GAZE → ({gaze_x:.1f}, {gaze_y:.1f}) px")
-
-
-
-
-
-
-
-
-test_dataset = AkidaGazeDataset(split="test")
+DATA_ROOT_AKIDA = Path("/home/pi/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_akida_test_small")
+test_dataset = AkidaGazeDataset(split="test", data_root=DATA_ROOT_AKIDA)
 test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=4)
 
 total_error_px = 0.0
@@ -153,12 +146,51 @@ for batch in pbar:
                       "Model Lat(ms)": f"{total_model_time_ms / total_samples:.2f}",
                       "Total Lat(ms)": f"{total_time_ms / total_samples:.2f}"})
 
+
+# formatter for file sizes
+def format_size(b):
+    for unit in ['B', 'KB', 'MB', 'GB']:
+        if b < 1024: return f"{b:.1f}{unit}"
+        b /= 1024
+    return f"{b:.1f}GB"
+
 # Final result
 akida_l2 = total_error_px / total_samples
+akida_size = format_size(os.path.getsize(AKIDA_PATH)) if AKIDA_PATH.exists() else "N/A"
 akida_latency_ms = total_model_time_ms / total_samples
 akida_total_latency_ms = total_time_ms / total_samples
+
 print(f"\nAKIDA SNN FINAL RESULTS")
 print(f"Total samples: {total_samples}")
+print(f"Model size: {akida_size}")
 print(f"Average L2 error: {akida_l2:.2f} px")
 print(f"Average Model latency (ms): {akida_latency_ms:.2f} ms → {1000/akida_latency_ms:.0f} FPS")
 print(f"Average Total latency (ms): {akida_total_latency_ms:.2f} ms → {1000/akida_total_latency_ms:.0f} FPS")
+
+
+
+
+
+
+
+
+
+
+# ============================================================
+# Save clean report 
+# ============================================================
+summary_path = AKIDA_FOLDER_PATH / "akida_pi_report.txt"
+with open(summary_path, "w") as f:
+    f.write("Inference in Akida Chip on Raspberry Pi - Report\n")
+    f.write("="*65 + "\n")
+    f.write(f"{'Model':<12} {'Gaze L2 (px)':>15} {'Size':>15} {'Model Lat(ms)':>15} {'Total Lat(ms)':>15} \n")
+    f.write("-"*65 + "\n")
+    
+    f.write(f"{'AKIDA_QINT8_PI':<12} {akida_l2:15.3f} px {akida_size:>15} {akida_latency_ms:>15.2f} {akida_total_latency_ms:>15.2f}\n")
+    
+    f.write("-"*65 + "\n")
+    f.write(f"Test samples: {total_samples:,}\n")
+    f.write(f"Original model: {AKIDA_PATH} ({akida_size})\n")
+    f.write(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+
+print(f"Clean L2 report saved → {summary_path}")
