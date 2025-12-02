@@ -1,0 +1,9 @@
+Inference in Akida Chip on Raspberry Pi - Report
+=================================================================
+Model           Gaze L2 (px)            Size   Model Lat(ms)   Total Lat(ms) 
+-----------------------------------------------------------------
+AKIDA_QINT8_PI          18.615 px           1.2MB           12.47           12.52
+-----------------------------------------------------------------
+Test samples: 1,446
+Original model: akida_examples/1_ec_example/quantized_models/q8_calib_b8_n10/akida_models/akida_int8_v2.fbz (1.2MB)
+Generated: 2025-12-02 18:10:18

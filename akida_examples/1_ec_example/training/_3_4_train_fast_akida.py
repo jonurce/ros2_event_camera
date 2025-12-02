@@ -41,10 +41,12 @@ LEARNING_RATE = 0.002
 WEIGHT_DECAY = 0.005
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-# DATA_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_akida")
-# LOG_DIR = Path(f"/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_12_akida_b{BATCH_SIZE}_e{NUM_EPOCHS}")
-DATA_ROOT = Path("/home/pi/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_akida")
-LOG_DIR = Path(f"/home/pi/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_12_akida_b{BATCH_SIZE}_e{NUM_EPOCHS}")
+DATA_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_akida")
+LOG_DIR = Path(f"/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_12_akida_b{BATCH_SIZE}_e{NUM_EPOCHS}")
+
+# DATA_ROOT = Path("/home/pi/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_akida")
+# LOG_DIR = Path(f"/home/pi/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_12_akida_b{BATCH_SIZE}_e{NUM_EPOCHS}")
+
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 LOG_FILE = LOG_DIR / f"training_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
 

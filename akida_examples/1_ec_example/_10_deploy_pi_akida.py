@@ -67,13 +67,17 @@ print("\nLoaded Akida SNN model")
 from akida import devices 
 
 # Detect real hardware
-devices = akida.devices()
-print(f'Available devices: {[dev.desc for dev in devices]}')
-assert len(devices), "No device found, this example needs an Akida NSoC_v2 device."
-device = devices[0]
-assert device.version == akida.NSoC_v2, "Wrong device found, this example needs an Akida NSoC_v2."
-print(f"Found Akida device: {device}")
-print(f"Akida device IP version: {device.ip_version}\n") # IpVersion.v1 !!!
+try:
+    devices = akida.devices()
+    print(f'Available devices: {[dev.desc for dev in devices]}')
+    assert len(devices), "No device found, this example needs an Akida NSoC_v2 device."
+    device = devices[0]
+    assert device.version == akida.NSoC_v2, "Wrong device found, this example needs an Akida NSoC_v2."
+    print(f"Found Akida device: {device}")
+    print(f"Akida device IP version: {device.ip_version}\n") # IpVersion.v1 !!!
+except Exception as e:
+    print(f"Error detecting Akida device: {e}")
+    print("This example needs an Akida NSoC_v2 device connected.")
 
 # Akida model properties
 print(f"Akida model device: {akida_model.device}")
@@ -99,7 +103,10 @@ print(f"Virtual device IP: {device_v2.ip_version}")  # IpVersion.v2
 # RUN INFERENCE ON REAL AKIDA HARDWARE
 # ============================================================
 
-DATA_ROOT_AKIDA = Path("/home/pi/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_akida_test_small")
+# DATA_ROOT_AKIDA = Path("/home/pi/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_akida_test_small")
+
+DATA_ROOT_AKIDA = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_akida_test_small")
+
 test_dataset = AkidaGazeDataset(split="test", data_root=DATA_ROOT_AKIDA)
 test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=4)
 
@@ -196,7 +203,7 @@ print(f"Average Total latency (ms): {akida_total_latency_ms:.2f} ms → {1000/ak
 # ============================================================
 # Save clean report 
 # ============================================================
-summary_path = AKIDA_FOLDER_PATH / "akida_report.txt"
+summary_path = AKIDA_FOLDER_PATH / "akida_alien_report.txt"
 with open(summary_path, "w") as f:
     f.write("Inference in Akida Chip on Raspberry Pi - Report\n")
     f.write("="*65 + "\n")
