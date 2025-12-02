@@ -4,7 +4,8 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent / "training"))
 from training._3_4_train_fast_akida import get_out_gaze_point, AkidaGazeDataset
 import numpy as np
-import time, datetime
+import time
+from datetime import datetime
 import torch
 import os
 import tensorflow as tf
@@ -48,10 +49,11 @@ BATCH_SIZE = 8
 
 from akida import Model
 AKIDA_FOLDER_PATH = Path("akida_examples/1_ec_example/quantized_models/q8_calib_b8_n10/akida_models")
-AKIDA_PATH = AKIDA_FOLDER_PATH / "akida_int8_v1.fbz"
+AKIDA_PATH = AKIDA_FOLDER_PATH / "akida_int8_v2.fbz"
+akida_model = Model(str(AKIDA_PATH)) # important! load model from akida
 akida_model = Model(str(AKIDA_PATH)) # important! load model from akida
 print("\nLoaded Akida SNN model")
-#akida_model.summary()
+# akida_model.summary()
 
 
 
@@ -65,21 +67,29 @@ print("\nLoaded Akida SNN model")
 from akida import devices 
 
 # Detect real hardware
-detected_device = devices()[0]  # important! takes first available AKD1000/1500/PCIe
-print(f"Found Akida device: {detected_device}")
-print(f"Akida device version: {detected_device.version}")
+devices = akida.devices()
+print(f'Available devices: {[dev.desc for dev in devices]}')
+assert len(devices), "No device found, this example needs an Akida NSoC_v2 device."
+device = devices[0]
+assert device.version == akida.NSoC_v2, "Wrong device found, this example needs an Akida NSoC_v2."
+print(f"Found Akida device: {device}")
+print(f"Akida device IP version: {device.ip_version}\n") # IpVersion.v1 !!!
 
-# Map your saved model to hardware
-# akida.MapMode(2) # AllNps = 1 (default) / HwPr = 2 / Minimal = 3
-# akida.MapConstraints(device=detected_device)
+# Akida model properties
+print(f"Akida model device: {akida_model.device}")
+print(f"Akida model IP version: {akida_model.ip_version}") # IpVersion.v2
+print(f"Akida model MACs: {akida_model.macs}\n")
 
-akida_model.map(detected_device)     # important! map model to NSOC
-print("Model mapped to hardware — ready for ultra-low power inference")
-# akida_model.summary()
-exit()
+# Akida model version
+print(f"Akida module version: {akida.__version__}")
 
-device.soc.power_measurement_enabled = True
+# Create v2 virtual device (emulates SixNodesIPv2)
+device_v2 = akida.SixNodesIPv2()
+print(f"Virtual device IP: {device_v2.ip_version}")  # IpVersion.v2
 
+
+# Enable power measurement
+# device.soc.power_measurement_enabled = True
 
 
 
@@ -97,6 +107,7 @@ total_error_px = 0.0
 total_samples = 0
 total_model_time_ms = 0.0
 total_time_ms = 0.0
+# total_power_mw = 0.0
 
 print("\nEvaluating Akida SNN on test set...")
 pbar = tqdm(test_loader, desc="Akida SNN Eval", leave=True)
@@ -113,8 +124,11 @@ for batch in pbar:
 
     # Inference on REAL Akida chip
     start = time.time()
-    pred = mapped_model.predict(x)          # [B, H=3, W=4, C=3]
+    pred = akida_model.predict(x)          # [B, H=3, W=4, C=3]
     latency_ms = (time.time() - start) * 1000
+
+    # Floor power (mW)
+    # floor_power = device_v2.soc.power_meter.floor
 
     # Convert to torch for your gaze function
     pred_t = torch.from_numpy(pred)
@@ -141,10 +155,12 @@ for batch in pbar:
     total_samples += x.shape[0]
     total_model_time_ms += latency_ms
     total_time_ms += total_latency_ms
+    # total_power_mw += floor_power
 
     pbar.set_postfix({"L2": total_error_px / total_samples ,
                       "Model Lat(ms)": f"{total_model_time_ms / total_samples:.2f}",
                       "Total Lat(ms)": f"{total_time_ms / total_samples:.2f}"})
+    # "Total Power(mW)": f"{total_power_mw / total_samples:.2f}
 
 
 # formatter for file sizes
@@ -159,6 +175,7 @@ akida_l2 = total_error_px / total_samples
 akida_size = format_size(os.path.getsize(AKIDA_PATH)) if AKIDA_PATH.exists() else "N/A"
 akida_latency_ms = total_model_time_ms / total_samples
 akida_total_latency_ms = total_time_ms / total_samples
+# akida_power_mw = total_power_mw / total_samples
 
 print(f"\nAKIDA SNN FINAL RESULTS")
 print(f"Total samples: {total_samples}")
@@ -166,7 +183,7 @@ print(f"Model size: {akida_size}")
 print(f"Average L2 error: {akida_l2:.2f} px")
 print(f"Average Model latency (ms): {akida_latency_ms:.2f} ms → {1000/akida_latency_ms:.0f} FPS")
 print(f"Average Total latency (ms): {akida_total_latency_ms:.2f} ms → {1000/akida_total_latency_ms:.0f} FPS")
-
+# print(f"Average Inference power (mW): {akida_power_mw:.2f} mW")
 
 
 
@@ -179,7 +196,7 @@ print(f"Average Total latency (ms): {akida_total_latency_ms:.2f} ms → {1000/ak
 # ============================================================
 # Save clean report 
 # ============================================================
-summary_path = AKIDA_FOLDER_PATH / "akida_pi_report.txt"
+summary_path = AKIDA_FOLDER_PATH / "akida_report.txt"
 with open(summary_path, "w") as f:
     f.write("Inference in Akida Chip on Raspberry Pi - Report\n")
     f.write("="*65 + "\n")

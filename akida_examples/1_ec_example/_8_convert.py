@@ -76,16 +76,16 @@ set_akida_version(target_version)
 updated_version = get_akida_version()
 print(f'Target version: {target_version} \n')
 print(f'Updated version: {updated_version} \n')
-exit()
 
 
 
 
-print("Checking model compatibility for Akida 2.0...")
-model_tennst_onnx = onnx.load(str(TENNST_PATH))
 
-from akida import devices 
-detected_device = devices()[0]
+# print("Checking model compatibility for Akida 2.0...")
+# model_tennst_onnx = onnx.load(str(TENNST_PATH))
+
+# from akida import devices 
+# detected_device = devices()[0]
 
 # compatibility = cnn2snn.check_model_compatibility(model_q8_onnx_int8, device=detected_device, input_dtype="uint8")
 # compatibility = cnn2snn.check_model_compatibility(model_q8_onnx_int8)
@@ -113,17 +113,48 @@ detected_device = devices()[0]
 print("Converting to Akida 2.0...")
 # Convert to Akida SNN model (for Akida 2.0)
 try:
-    # akida_model = cnn2snn.convert(model_q8_onnx_int8, target_akida_version=2)
-    # cnn2snn.set_akida_version(cnn2snn.AkidaVersion.v1)
-    # akida_model = cnn2snn.convert(model_q8_onnx_int8)
-    akida_model = target_version.convert(model_q8_onnx_int8)
-    # akida_model.summary()
+    akida_model = cnn2snn.convert(model_q8_onnx_int8)
+    akida_model.summary()
 
-    akida_path = AKIDA_FOLDER_PATH / "akida_int8_v1.fbz"
+    akida_path = AKIDA_FOLDER_PATH / "akida_int8_v2.fbz"
     akida_model.save(str(akida_path))
     print("Akida SNN model saved → ", akida_path)
     
 except Exception as e:
     print(f"Model not fully accelerated by Akida. Reason: {str(e)}")
 
+
+
+# ============================================================
+# MAP TO AKIDA HARDWARE NSOC
+# ============================================================
+import akida 
+devices = akida.devices()
+print(f'Available devices: {[dev.desc for dev in devices]}')
+assert len(devices), "No device found, this example needs an Akida NSoC_v2 device."
+device = devices[0]
+assert device.version == akida.NSoC_v2, "Wrong device found, this example needs an Akida NSoC_v2."
+print(f"Found Akida device: {device}")
+print(f"Akida device IP version: {device.ip_version}")
+print(f"Akida device version: {device.version}\n")
+
+print(f"Akida HwVersion IP version: {akida.HwVersion.ip_version}\n")
+
+print(f"Akida model device: {akida_model.device}")
+print(f"Akida model IP version: {akida_model.ip_version}")
+print(f"Akida model MACs: {akida_model.macs}\n")
+
+print(f"Akida module version: {akida.__version__}")
+
+# Create v2 virtual device (emulates SixNodesIPv2)
+device_v2 = akida.SixNodesIPv2()
+
+print(f"Virtual device IP: {device_v2.ip_version}")  # IpVersion.v2
+
+
+akida_model.map(device_v2)     # important! map model to NSOC
+print("Model mapped to hardware — ready for ultra-low power inference")
+
+# Check model mapping: NP allocation and binary size
+akida_model.summary()
 
