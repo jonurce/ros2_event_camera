@@ -37,13 +37,13 @@ warnings.filterwarnings("ignore", category=UserWarning, module="torch._logging")
 # ============================================================
 BATCH_SIZE = 8  
 NUM_EPOCHS = 100
-LEARNING_RATE = 0.002
+LEARNING_RATE = 0.004
 WEIGHT_DECAY = 0.005
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Alienware paths
 DATA_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_open")
-LOG_DIR = Path(f"/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_2_11_8GB_b{BATCH_SIZE}_e{NUM_EPOCHS}")
+LOG_DIR = Path(f"/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_2_11_8GB_b{BATCH_SIZE}_e{NUM_EPOCHS}_lr{LEARNING_RATE}")
 LOG_DIR.mkdir(exist_ok=True)
 LOG_FILE = LOG_DIR / f"training_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
 

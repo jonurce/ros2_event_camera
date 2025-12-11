@@ -51,6 +51,7 @@ W_OUT, H_OUT = 4, 3          # Output heatmap size (out coordinates)
 
 BATCH_S = 8
 MAX_BATCH_NUMBER = 10
+MAX_TEST_BATCH = 200
 
 # Output
 QUANTIZED_FOLDER_PATH = Path(f"akida_examples/1_ec_example/quantized_models/q8_default_new_b{BATCH_S}_n{MAX_BATCH_NUMBER}")
@@ -82,7 +83,7 @@ checkpoint = torch.load(MODEL_PATH, map_location=DEVICE)
 if "model_state_dict" in checkpoint:
     state_dict = checkpoint["model_state_dict"]
     print(f"Loaded checkpoint from epoch {checkpoint.get('epoch', '?')}")
-    print(f"   → val_loss: {checkpoint.get('val_loss', 'N/A'):.4f} | val_loss_l2: {checkpoint.get('val_loss_l2', 'N/A'):.3f}")
+    print(f"   → val_loss_l2: {checkpoint.get('val_loss_l2', 'N/A'):.3f}")
 elif "state_dict" in checkpoint:
     state_dict = checkpoint["state_dict"]
 else:
@@ -136,7 +137,9 @@ tennst_model_time_ms = 0.0
 tennst_time_ms = 0.0
 
 with torch.no_grad():
-    for batch in tqdm(test_loader, desc="Tennst"):
+    for i, batch in enumerate(tqdm(test_loader, total=MAX_TEST_BATCH)):
+        if i >= MAX_TEST_BATCH:
+            break
         
         x = batch['input'].to(DEVICE)      # [B,2,50,96,128] uint8
         y = batch['target'].to(DEVICE)     # [B,3,50,3,4] float32
@@ -204,7 +207,7 @@ checkpoint = torch.load(MODEL_PATH, map_location="cpu")
 if "model_state_dict" in checkpoint:
     state_dict = checkpoint["model_state_dict"]
     print(f"Loaded checkpoint from epoch {checkpoint.get('epoch', '?')}")
-    print(f"   → val_loss: {checkpoint.get('val_loss', 'N/A'):.4f} | val_loss_l2: {checkpoint.get('val_loss_l2', 'N/A'):.3f}")
+    print(f"   → val_loss_l2: {checkpoint.get('val_loss_l2', 'N/A'):.3f}")
 elif "state_dict" in checkpoint:
     state_dict = checkpoint["state_dict"]
 else:
@@ -351,8 +354,11 @@ def evaluate_model(model_q, model_path, name):
     total_samples = 0
     total_q8_model_time_ms = 0.0
     total_q8_time_ms = 0.0
+    MAX_TEST_BATCH = 20
 
-    for batch in tqdm(test_loader):
+    for i, batch in enumerate(tqdm(test_loader, total=MAX_TEST_BATCH)):
+        if i >= MAX_TEST_BATCH:
+            break
         
         for frame_idx in range(batch['input'].shape[2]):
             # batch['input'] -> [B,2,50,96,128] uint8 
