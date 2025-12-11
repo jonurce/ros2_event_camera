@@ -14,7 +14,7 @@ simplified_T10_path = "akida_examples/1_ec_example/training/runs/tennst_5_260GB_
 akida_csv_path = "akida_examples/1_ec_example/training/runs/tennst_16_akida_b128_e150_ce_12mse_origpx/training_log_20251211_113530.csv"   # <-- put your file here
 
 # Read CSV
-df = pd.read_csv(akida_csv_path)
+df = pd.read_csv(simplified_T1_path)
 
 # Convert to numeric (in case)
 df['train_l2'] = pd.to_numeric(df['train_l2'], errors='coerce')
@@ -38,5 +38,5 @@ plt.grid(True, alpha=0.3)
 plt.tight_layout()
 
 # Optional: save plot
-plt.savefig('loss_akida.png', dpi=200)
+plt.savefig('loss_tennst_T1.png', dpi=200)
 plt.show()

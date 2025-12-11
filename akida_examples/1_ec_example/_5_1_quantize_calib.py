@@ -51,7 +51,7 @@ MAX_BATCH_NUMBER = 10
 MAX_TEST_BATCH = 200
 
 # Output
-QUANTIZED_FOLDER_PATH = Path(f"akida_examples/1_ec_example/quantized_models/q8_calib_new_b{BATCH_S}_n{MAX_BATCH_NUMBER}")
+QUANTIZED_FOLDER_PATH = Path(f"akida_examples/1_ec_example/quantized_models/q8_calib_GOOD_b{BATCH_S}_n{MAX_BATCH_NUMBER}")
 QUANTIZED_FOLDER_PATH.mkdir(exist_ok=True)
 
 
@@ -132,6 +132,8 @@ samples = 0
 tennst_model_time_ms = 0.0
 tennst_time_ms = 0.0
 
+n_test = len(test_loader)
+
 with torch.no_grad():
     for i, batch in enumerate(tqdm(test_loader, total=MAX_TEST_BATCH)):
         if i >= MAX_TEST_BATCH:
@@ -174,7 +176,8 @@ print("\nTennst PyTorch model evaluation complete:")
 print(f"Tennst PyTorch model → Gaze L2: {tennst_l2:.3f} px | Size: {tennst_size_str} | Model Latency: {tennst_model_time_ms:.2f} ms | Total Latency: {tennst_time_ms:.2f} ms")
 
 
-
+print("Total test samples:", samples)
+print("Total test batches:", n_test)
 
 
 
@@ -386,7 +389,11 @@ def evaluate_model(model_q, model_path, name):
     for i, batch in enumerate(tqdm(test_loader, total=MAX_TEST_BATCH)):
         if i >= MAX_TEST_BATCH:
             break
-        
+
+        latency_ms = 0.0
+        total_latency_ms = 0.0
+
+        # single batch inference (over frames)
         for frame_idx in range(batch['input'].shape[2]):
             # batch['input'] -> [B,2,50,96,128] uint8 
             x_np = batch['input'][:, :, frame_idx, ...].float().numpy()   # [B,2,96,128] float32
@@ -396,8 +403,10 @@ def evaluate_model(model_q, model_path, name):
 
             # Inference
             start = time.time()
+            
             pred = session.run(None, {model_quant.input[0].name: x_np})[0] # [B,3,3,4]
-            latency_ms = (time.time() - start) * 1000
+
+            latency_ms += (time.time() - start) * 1000
 
             # Convert to torch for get_out_gaze_point
             pred_t = torch.from_numpy(pred)
@@ -407,7 +416,7 @@ def evaluate_model(model_q, model_path, name):
             pred_px = pred_x * W / W_OUT 
             pred_py = pred_y * H / H_OUT
 
-            total_latency_ms = (time.time() - start) * 1000
+            total_latency_ms += (time.time() - start) * 1000
 
             # Extract gaze points in out cooridnates + convert to pixels
             targ_t = torch.from_numpy(target)
@@ -415,12 +424,12 @@ def evaluate_model(model_q, model_path, name):
             gt_px   = gt_x   * W / W_OUT
             gt_py   = gt_y   * H / H_OUT
 
-            error_l2_px = torch.sqrt((pred_px - gt_px)**2 + (pred_py - gt_py)**2).mean()
-
-            total_error_px += error_l2_px.item()
-            total_samples += x_np.shape[0]
-            total_q8_model_time_ms += latency_ms
-            total_q8_time_ms += total_latency_ms
+        # only on last frame
+        error_l2_px = torch.sqrt((pred_px - gt_px)**2 + (pred_py - gt_py)**2).mean()
+        total_error_px += error_l2_px.item()
+        total_samples += x_np.shape[0]
+        total_q8_model_time_ms += latency_ms
+        total_q8_time_ms += total_latency_ms
         
         # Reset FIFOs between each file
         reset_buffers(model_quant)

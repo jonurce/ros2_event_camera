@@ -32,6 +32,7 @@ W_IN, H_IN = 128, 96         # Model input size (pixels)
 W_OUT, H_OUT = 4, 3          # Output heatmap size (out coordinates)
 
 BATCH_SIZE = 8
+MAX_TEST_BATCH = 20
 
 
 
@@ -41,8 +42,8 @@ BATCH_SIZE = 8
 # LOAD SAVED SNN INT8 MODEL
 # ============================================================
 
-AKIDA_FOLDER_PATH = Path("akida_examples/1_ec_example/akida_models")
-akida_path = AKIDA_FOLDER_PATH / "akida2_int8.fbz"
+AKIDA_FOLDER_PATH = Path("akida_examples/1_ec_example/quantized_models/q8_calib_new_b8_n10/akida_models")
+akida_path = AKIDA_FOLDER_PATH / "akida_int8_v2.fbz"
 akida_model = akida.Model(str(akida_path))
 print("\nLoaded Akida SNN model:")
 akida_model.summary()
@@ -103,7 +104,6 @@ total_model_time_ms = 0.0
 total_time_ms = 0.0
 
 print("\nEvaluating Akida SNN on test set...")
-pbar = tqdm(test_loader, desc="Akida SNN Eval", leave=True)
 
 # formatter for file sizes
 def format_size(b):
@@ -112,7 +112,9 @@ def format_size(b):
         b /= 1024
     return f"{b:.1f}GB"
 
-for batch in pbar:
+for i, batch in enumerate(tqdm(test_loader, desc="Akida SNN Eval", total=MAX_TEST_BATCH)):
+    if i >= MAX_TEST_BATCH:
+        break
     for frame_idx in range(batch['input'].shape[2]):
 
         # Input: [B, 2, 50, 96, 128] → we only need frame_idx frame for 4D model

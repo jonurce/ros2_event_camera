@@ -36,7 +36,7 @@ warnings.filterwarnings("ignore", category=UserWarning, module="torch._logging")
 # CONFIGURATION — NOW OPTIMIZED FOR SPEED
 # ============================================================
 BATCH_SIZE = 8  
-NUM_EPOCHS = 100
+NUM_EPOCHS = 150
 LEARNING_RATE = 0.004
 WEIGHT_DECAY = 0.005
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -181,6 +181,8 @@ def main():
 
     signal.signal(signal.SIGINT, save_on_interrupt)
     epoch_time = 0.0
+    n_train = len(train_loader)
+    n_val = len(val_loader)
 
     # Training loop
     for epoch in range(NUM_EPOCHS):
@@ -214,11 +216,21 @@ def main():
 
         epoch_time += time.time() - epoch_start_time
 
+        logger.log(epoch,
+                    train_loss_total / n_train,
+                    0.0,  # val loss placeholder
+                    scheduler.get_last_lr()[0],
+                    epoch_time)
+            
+        epoch_time = 0.0
+
         # Validation every 5 epochs
         VAL_EPOCH_INTERVAL = 5
         if (epoch + 1) % VAL_EPOCH_INTERVAL == 0 or epoch == NUM_EPOCHS - 1:
             model.eval()
             val_loss_total = 0.0
+            epoch_start_time = time.time()
+
             with torch.no_grad():
                 for batch in val_loader:
                     x = batch['input'].to(DEVICE, non_blocking=True)
@@ -230,14 +242,14 @@ def main():
 
                     val_loss_total += loss.item()
 
+            epoch_time += time.time() - epoch_start_time
+
             # Logging
-            n_train = len(train_loader)
-            n_val = len(val_loader)
             logger.log(epoch,
                        train_loss_total / n_train,
                        val_loss_total / n_val,
                        scheduler.get_last_lr()[0],
-                       epoch_time / VAL_EPOCH_INTERVAL)
+                       epoch_time)
             
             epoch_time = 0.0
 

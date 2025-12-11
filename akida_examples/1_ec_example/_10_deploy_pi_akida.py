@@ -48,12 +48,11 @@ BATCH_SIZE = 8
 # ============================================================
 
 from akida import Model
-AKIDA_FOLDER_PATH = Path("akida_examples/1_ec_example/quantized_models/q8_calib_b8_n10/akida_models")
+AKIDA_FOLDER_PATH = Path("akida_examples/1_ec_example/quantized_models/q8_calib_GOOD_b8_n10/akida_models")
 AKIDA_PATH = AKIDA_FOLDER_PATH / "akida_int8_v2.fbz"
 akida_model = Model(str(AKIDA_PATH)) # important! load model from akida
 print("\nLoaded Akida SNN model")
 akida_model.summary()
-exit()
 
 
 
@@ -105,7 +104,7 @@ print(f"Virtual device IP: {device_v2.ip_version}")  # IpVersion.v2
 
 # DATA_ROOT_AKIDA = Path("/home/pi/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_akida_test_small")
 
-DATA_ROOT_AKIDA = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_akida_test_small")
+DATA_ROOT_AKIDA = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_akida")
 
 test_dataset = AkidaGazeDataset(split="test", data_root=DATA_ROOT_AKIDA)
 test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=4)
@@ -116,58 +115,64 @@ total_model_time_ms = 0.0
 total_time_ms = 0.0
 # total_power_mw = 0.0
 
+MAX_TEST_BATCH = 100
+
 print("\nEvaluating Akida SNN on test set...")
-pbar = tqdm(test_loader, desc="Akida SNN Eval", leave=True)
 
-for batch in pbar:
-    # Input: [B, 2, 50, 96, 128] → we only need last frame for 4D model
-    # → take last timestep and convert to [B, 96, 128, 2] uint8
-    x = batch['input'][:, :, -1, :, :].numpy()       # [B, 2, 96, 128]
-    x = np.transpose(x, (0, 2, 3, 1))                # → [B, 96, 128, 2]
-    x = np.clip(x, 0, 1).astype(np.int8)        # ensure int8 (0,1)
+for i, batch in enumerate(tqdm(test_loader, total=MAX_TEST_BATCH)):
+    if i >= MAX_TEST_BATCH:
+        break
 
-    # Ground truth: from [B, 3, 50, 3, 4] → we only need last frame for 4D model
-    target = batch['target'][:, :, -1, :, :].numpy()  # [B, C=3, H=3, W=4]
-
-    # Inference on REAL Akida chip
-    start = time.time()
-    pred = akida_model.predict(x)          # [B, H=3, W=4, C=3]
-    latency_ms = (time.time() - start) * 1000
-
-    # Floor power (mW)
-    # floor_power = device_v2.soc.power_meter.floor
-
-    # Convert to torch for your gaze function
-    pred_t = torch.from_numpy(pred)
-    pred_t = pred_t.permute(0, 3, 1, 2)    # [B, C=3, H=3, W=4]
-
-    # Convert to pixels
-    pred_x, pred_y, _, _ = get_out_gaze_point(pred_t, one_frame_only=True)
-    pred_px = pred_x * W / W_OUT
-    pred_py = pred_y * H / H_OUT
+    latency_ms = 0.0
+    total_latency_ms = 0.0
     
-    total_latency_ms = (time.time() - start) * 1000
+    # single batch inference (over frames)
+    for frame_idx in range(batch['input'].shape[2]):
+        # Input: [B, 2, 50, 96, 128] → we only need frame_idx frame for 4D model
+        # → take frame_idx timestep and convert to [B, 96, 128, 2] uint8
+        x = batch['input'][:, :, frame_idx, :, :].numpy()       # [B, 2, 96, 128]
+        x = np.transpose(x, (0, 2, 3, 1))                # → [B, 96, 128, 2]
+        x = np.clip(x, 0, 1).astype(np.int8)        # ensure int8 (0,1)
 
-    # Convert to pixels
-    targ_t = torch.from_numpy(target)
-    gt_x,   gt_y,   _, _ = get_out_gaze_point(targ_t, one_frame_only=True)
-    gt_px   = gt_x   * W / W_OUT
-    gt_py   = gt_y   * H / H_OUT
+        # Ground truth: from [B, 3, 50, 3, 4] → we only need frame_idx frame for 4D model
+        target = batch['target'][:, :, frame_idx, :, :].numpy()  # [B, C=3, H=3, W=4]
 
-    # L2 error
+        # Inference on REAL Akida chip
+        start = time.time()
+        pred = akida_model.predict(x)          # [B, H=3, W=4, C=3]
+        latency_ms += (time.time() - start) * 1000
+
+        # Floor power (mW)
+        # floor_power = device_v2.soc.power_meter.floor
+
+        # Convert to torch for your gaze function
+        pred_t = torch.from_numpy(pred)
+        pred_t = pred_t.permute(0, 3, 1, 2)    # [B, C=3, H=3, W=4]
+
+        # Convert to pixels
+        pred_x, pred_y, _, _ = get_out_gaze_point(pred_t, one_frame_only=True)
+        pred_px = pred_x * W / W_OUT
+        pred_py = pred_y * H / H_OUT
+        
+        total_latency_ms += (time.time() - start) * 1000
+
+        # Convert to pixels
+        targ_t = torch.from_numpy(target)
+        gt_x,   gt_y,   _, _ = get_out_gaze_point(targ_t, one_frame_only=True)
+        gt_px   = gt_x   * W / W_OUT
+        gt_py   = gt_y   * H / H_OUT
+
+    # L2 error on last frame
     error_l2 = torch.sqrt((pred_px - gt_px)**2 + (pred_py - gt_py)**2).mean()
 
-    # Accumulate results
-    total_error_px += error_l2.sum().item()
+    # Accumulate results for batch
+    total_error_px += error_l2.item()
     total_samples += x.shape[0]
     total_model_time_ms += latency_ms
     total_time_ms += total_latency_ms
     # total_power_mw += floor_power
 
-    pbar.set_postfix({"L2": total_error_px / total_samples ,
-                      "Model Lat(ms)": f"{total_model_time_ms / total_samples:.2f}",
-                      "Total Lat(ms)": f"{total_time_ms / total_samples:.2f}"})
-    # "Total Power(mW)": f"{total_power_mw / total_samples:.2f}
+    
 
 
 # formatter for file sizes

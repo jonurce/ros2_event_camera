@@ -26,22 +26,16 @@ os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 # ============================================================
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-# ←←← CHANGE THIS: your new preprocessed_akida folder
-DATA_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_akida")
-
 # ←←← CHANGE THIS: your best.pth from the new training run
-MODEL_PATH = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_12_akida_b128_e10/best.pth")
+MODEL_PATH = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_16_akida_b128_e150_ce_12mse_origpx/best.pth") 
 
 BATCH_SIZE = 128        # even larger = faster inference (uint8 input = tiny memory)
 W, H = 640, 480         # original image size
 W_IN, H_IN = 128, 96    # Akida input size
 W_OUT, H_OUT = 4, 3     # final feature map size
-PIXEL_SCALE = (W_IN + H_IN) / (W_OUT + H_OUT)
 
 print(f"Testing Akida-exact model on {DEVICE}")
 print(f"Model: {MODEL_PATH.name}")
-print(f"Dataset: {DATA_ROOT}")
-
 
 
 # ============================================================
@@ -74,7 +68,7 @@ def main():
     if 'model_state_dict' in checkpoint:
         state_dict = checkpoint['model_state_dict']
         print(f"Loaded checkpoint from epoch {checkpoint.get('epoch', '?')}")
-        print(f"   → val_loss: {checkpoint.get('val_loss', 'N/A'):.4f} | val_loss_l2: {checkpoint.get('val_loss_l2', 'N/A'):.3f}")
+        print(f"   →  val_loss_l2: {checkpoint.get('val_loss_l2', 'N/A'):.3f}")
     else:
         state_dict = checkpoint  # old format: direct state_dict
     
@@ -90,6 +84,7 @@ def main():
     # Metrics
     total_gaze_error_px = 0.0
     total_samples = 0
+    n_test   = len(test_loader)
 
     print("Starting inference on test set...")
     for batch in tqdm(test_loader, desc="Testing"):
@@ -120,22 +115,22 @@ def main():
         total_samples += x.size(0)
 
     # Final results
-    avg_l2_px = total_gaze_error_px / total_samples
+    # avg_l2_px = total_gaze_error_px / total_samples
+    avg_l2_px = total_gaze_error_px / n_test
 
     print("\n" + "="*60)
     print("FINAL AKIDA-EXACT TEST RESULTS")
     print("="*60)
     print(f"Total test samples          : {total_samples:,}")
-    print(f"Gaze L2 (in model input px) : {avg_l2_px:.3f} pixels")
-    print(f"Pixel scale factor          : {PIXEL_SCALE:.1f} px per cell")
+    print(f"Total test batches         : {n_test:,}")
+    print(f"Gaze L2 (in original px) : {avg_l2_px:.3f} pixels")
     print("="*60)
 
     # Save results
     result_file = MODEL_PATH.parent / "test_results.txt"
     with open(result_file, 'w') as f:
-        f.write(f"Gaze L2 (in model input px): {avg_l2_px:.3f} px\n")
+        f.write(f"Gaze L2 (in original px): {avg_l2_px:.3f} px\n")
         f.write(f"Total samples: {total_samples}\n")
-        f.write(f"Dataset: {DATA_ROOT}\n")
         f.write(f"Model: {MODEL_PATH.name}\n")
     print(f"Results saved to: {result_file}")
 

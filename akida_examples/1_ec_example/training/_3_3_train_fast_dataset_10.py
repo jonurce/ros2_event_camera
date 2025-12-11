@@ -187,6 +187,7 @@ def main():
         model.train()
         train_loss_total = 0.0
         epoch_start_time = time.time()
+        
         pbar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{NUM_EPOCHS} [Train]")
 
         for batch in pbar:
