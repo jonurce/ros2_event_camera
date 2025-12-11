@@ -16,6 +16,7 @@ import csv
 from tqdm import tqdm
 import signal
 from _2_5_model_uint8_akida import EyeTennSt 
+import time
 
 # TF32 can spike power on Ampere/Turing cards
 torch.backends.cuda.matmul.allow_tf32 = False
@@ -36,13 +37,13 @@ warnings.filterwarnings("ignore", category=UserWarning, module="torch._logging")
 # CONFIG
 # ================================================
 BATCH_SIZE = 128   
-NUM_EPOCHS = 10
+NUM_EPOCHS = 150
 LEARNING_RATE = 0.002
 WEIGHT_DECAY = 0.005
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 DATA_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_akida")
-LOG_DIR = Path(f"/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_12_akida_b{BATCH_SIZE}_e{NUM_EPOCHS}")
+LOG_DIR = Path(f"/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_16_akida_b{BATCH_SIZE}_e{NUM_EPOCHS}_ce_12mse_origpx")
 
 # DATA_ROOT = Path("/home/pi/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_akida")
 # LOG_DIR = Path(f"/home/pi/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_12_akida_b{BATCH_SIZE}_e{NUM_EPOCHS}")
@@ -232,19 +233,25 @@ def akida_loss(pred, target):
 
     pred_x, pred_y, pred_cell, pred_conf = get_out_gaze_point(pred)
     gt_x, gt_y, gt_cell, gt_conf = get_out_gaze_point(target)
+    pred_px = pred_x * W / W_OUT 
+    pred_py = pred_y * H / H_OUT
+    gt_px   = gt_x   * W / W_OUT
+    gt_py   = gt_y   * H / H_OUT
 
     # L1 error in normalized space
-    loss_l1 = F.l1_loss(
-        torch.stack([pred_x / W_OUT, pred_y / H_OUT], dim=1),
-        torch.stack([gt_x   / W_OUT, gt_y   / H_OUT], dim=1)
-    )
+    # loss_l1 = F.l1_loss(
+    #     torch.stack([pred_x / W_OUT, pred_y / H_OUT], dim=1),
+    #     torch.stack([gt_x   / W_OUT, gt_y   / H_OUT], dim=1)
+    # )
+
     # or Euclidean in OUT pixel space
-    loss_l2 = torch.sqrt(  (pred_x - gt_x)**2  +  (pred_y - gt_y)**2  ).mean()
+    loss_l2 = torch.sqrt(  (pred_px - gt_px)**2  +  (pred_py - gt_py)**2  ).mean()
     
-    weight_l2 = 2000
+    # weight_l2 = 2000
+    weight_l2 = 12
 
     # return loss_ce + weight_l1 * loss_l1, loss_ce, loss_l1, weight_l1
-    return loss_ce + weight_l2 * loss_l2, loss_ce, loss_l2, weight_l2
+    return loss_ce + weight_l2 * loss_l2, loss_ce, weight_l2 * loss_l2, weight_l2
 
 # ================================================
 # MAIN TRAINING LOOP
@@ -284,10 +291,9 @@ def main():
     # Logger
     with open(LOG_FILE, 'w', newline='') as f:
         w = csv.writer(f)
-        w.writerow(['epoch','train_loss','train_ce','train_l2','val_loss','val_loss_l2','lr'])
+        w.writerow(['epoch','train_l2','val_loss_l2','lr','epoch_time_sec'])
 
     # Initialize best metrics for validation and saving best model
-    best_val_loss = float('inf')
     best_val_loss_l2 = float('inf')
 
     # Handle Ctrl+C
@@ -298,9 +304,14 @@ def main():
     signal.signal(signal.SIGINT, save_sigint)
 
     # Training loop
+    n_train = len(train_loader)
+    n_val   = len(val_loader)
+    epoch_time = 0.0
+
     for epoch in range(NUM_EPOCHS):
         model.train()
-        train_loss = train_loss_ce = train_loss_l2 = 0.0
+        train_loss_l2 = 0.0
+        epoch_start_time = time.time()
         pbar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{NUM_EPOCHS}")
 
         for batch in pbar:
@@ -325,22 +336,35 @@ def main():
             scheduler.step()
 
             # Metrics
-            train_loss += loss.item()
-            train_loss_ce += loss_ce.item()
-            train_loss_l2 += loss_l2.item()
+            train_loss_l2 += loss_l2.item() / w_l2
             
             pbar.set_postfix({
-                'Total Loss': f"{loss.item():.3f}",
-                'Loss CE': f"{loss_ce.item():.3f}",
-                'Loss L2': f"{loss_l2.item():.3f}",
-                'L2 Weight': f"{w_l2:.3f}",
+                'Loss L2': f"{loss_l2.item() / w_l2:.3f}",
                 'Learning Rate': f"{scheduler.get_last_lr()[0]:.2e}"
             })
 
+        epoch_time = time.time() - epoch_start_time
+
+        train_loss_l2 /= n_train
+
+        # Log
+        with open(LOG_FILE, 'a', newline='') as f:
+            w = csv.writer(f)
+            w.writerow([epoch,
+                        f"{train_loss_l2:.4f}",
+                        0.0,
+                        f"{scheduler.get_last_lr()[0]:.2e}",
+                        epoch_time])
+
+        epoch_time = 0.0
+               
         # Validation every 5 epochs
         if (epoch + 1) % 5 == 0 or epoch == NUM_EPOCHS - 1:
+
             model.eval()
-            val_loss = val_loss_l2 = 0.0
+            val_loss_l2 = 0.0
+            epoch_start_time = time.time()
+
             with torch.no_grad():
                 for batch in val_loader:
                     # Model expects input:[B,2,50,96,128] uint8
@@ -357,59 +381,47 @@ def main():
                         # same as doing: mae_px = loss_l1 * (W / W_OUT)
                         # mae_px = loss_l1.item() * (W_IN + H_IN) / (W_OUT + H_OUT)
                     
-                    val_loss += loss.item()
-                    val_loss_l2 += loss_l2.item()
+                    val_loss_l2 += loss_l2.item() / w_l2
 
-            n_train = len(train_loader)
-            n_val   = len(val_loader)
+            epoch_time = time.time() - epoch_start_time
 
-            train_loss /= n_train
-            train_loss_ce /= n_train
-            train_loss_l2 /= n_train
-            val_loss /= n_val
             val_loss_l2 /= n_val
 
             # Log
             with open(LOG_FILE, 'a', newline='') as f:
                 w = csv.writer(f)
                 w.writerow([epoch+1,
-                            f"{train_loss:.4f}",
-                            f"{train_loss_ce:.4f}",
                             f"{train_loss_l2:.4f}",
-                            f"{val_loss:.4f}",
                             f"{val_loss_l2:.2f}",
-                            f"{scheduler.get_last_lr()[0]:.2e}"])
+                            f"{scheduler.get_last_lr()[0]:.2e}",
+                            epoch_time])
 
-            print(f"    Validation total loss: {val_loss:.4f} | Best: {best_val_loss:.4f}")
+            epoch_time = 0.0
             print(f"    Validation L2: {val_loss_l2:.2f} | Best: {best_val_loss_l2:.2f}")
 
             # Save best model
             if val_loss_l2 > 0 and val_loss_l2 < best_val_loss_l2:
                 
-                improvement = (best_val_loss - val_loss) / best_val_loss * 100 if best_val_loss != float('inf') else 0.0
                 improvement_l2 = (best_val_loss_l2 - val_loss_l2) / best_val_loss_l2 * 100 if best_val_loss_l2 != float('inf') else 0.0
-                best_val_loss = val_loss
                 best_val_loss_l2 = val_loss_l2
 
                 # torch.save(model.state_dict(), LOG_DIR / "best.pth")
                 torch.save({
                     'epoch': epoch + 1,
                     'model_state_dict': model.state_dict() if not isinstance(model, torch.nn.DataParallel) else model.module.state_dict(),
-                    'val_loss': best_val_loss,
                     'val_loss_l2': best_val_loss_l2,
                     'optimizer_state_dict': optimizer.state_dict(),
                 }, LOG_DIR / "best.pth")
 
-                print(f"    NEW BEST! → Loss: {best_val_loss:.4f} (-{improvement:.2f}%) | L2: {best_val_loss_l2:.3f} (-{improvement_l2:.2f}%)")
+                print(f"    NEW BEST! → L2: {best_val_loss_l2:.3f} (-{improvement_l2:.2f}%)")
 
     torch.save(model.state_dict(), LOG_DIR / "final.pth")
     torch.save({
         'epoch': NUM_EPOCHS,
         'model_state_dict': model.state_dict() if not isinstance(model, torch.nn.DataParallel) else model.module.state_dict(),
-        'val_loss': val_loss,
         'val_loss_l2': val_loss_l2,
     }, LOG_DIR / "final.pth")
-    print(f"\nTraining finished! Best L2: {best_val_loss:.2f}")
+    print(f"\nTraining finished! Best L2: {best_val_loss_l2:.2f}")
 
 if __name__ == "__main__":
     main()

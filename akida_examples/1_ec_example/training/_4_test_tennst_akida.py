@@ -107,16 +107,16 @@ def main():
 
         # pred_x, pred_y ∈ [0,4) and [0,3) → grid coordinates
         # Convert to model input pixels (128x96)
-        pred_px = pred_x * (W_IN / W_OUT)  
-        pred_py = pred_y * (H_IN / H_OUT)  
-        gt_px   = gt_x   * (W_IN / W_OUT)
-        gt_py   = gt_y   * (H_IN / H_OUT)
+        pred_px = pred_x * (W / W_OUT)  
+        pred_py = pred_y * (H / H_OUT)  
+        gt_px   = gt_x   * (W / W_OUT)
+        gt_py   = gt_y   * (H / H_OUT)
 
         # Now L2 in real pixels
         loss_l2_px = torch.sqrt((pred_px - gt_px)**2 + (pred_py - gt_py)**2).mean()
 
         # Accumulate real pixel error
-        total_gaze_error_px += loss_l2_px.sum().item()
+        total_gaze_error_px += loss_l2_px.item()
         total_samples += x.size(0)
 
     # Final results

@@ -11,6 +11,8 @@ akida_dw_edma/
 *label.txt
 *preprocessed/
 *preprocessed_fast/
+*preprocessed_open/
+*preprocessed_fast_open/
 *preprocessed_fast_compact/
 *preprocessed_akida/
 *preprocessed_akida_test_small/

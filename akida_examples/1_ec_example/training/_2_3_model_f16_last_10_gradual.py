@@ -80,7 +80,7 @@ class EyeTennSt(nn.Module):
         self.fc_gaze  = nn.Linear(4, 2)  # (x, y)
         # [1, 256] → [1, 1]
         # self.fc_state = nn.Linear(channels[-1], 1)  # binary logit
-        self.fc_state = nn.Linear(4, 1)  # binary logit
+        # self.fc_state = nn.Linear(4, 1)  # binary logit
 
     def forward(self, input):
         """
@@ -106,9 +106,10 @@ class EyeTennSt(nn.Module):
         # [B, 4] -> [B, 2]
         gaze  = self.fc_gaze(input) 
         # [B, 4] -> [B, 2]  
-        state = self.fc_state(input) 
+        # state = self.fc_state(input) 
 
-        return gaze, state.squeeze(1)
+        # return gaze, state.squeeze(1)
+        return gaze
 
 
 # ===================================================================
@@ -137,10 +138,11 @@ if __name__ == "__main__":
     # Simulate one batch of your data B=4
     dummy_input = torch.randn((4, 10, 640, 480), dtype=torch.float16)
 
-    gaze_pred, state_pred = model(dummy_input)
+    # gaze_pred, state_pred = model(dummy_input)
+    gaze_pred = model(dummy_input)
     print(f"Input:  {dummy_input.shape} (float)")
     print(f"Gaze:   {gaze_pred.shape}")
-    print(f"State:  {state_pred.shape}")
+    # print(f"State:  {state_pred.shape}")
 
     # Model summary
     summary(model, input_size=(1, 10, 640, 480), device="cuda")

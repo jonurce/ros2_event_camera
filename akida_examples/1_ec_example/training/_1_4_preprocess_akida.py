@@ -164,18 +164,18 @@ def preprocess_recording(folder, split, save_root):
             b_start = t_start + b * T_LABELED
             b_end = b_start + T_LABELED
 
+            # label index = first label (0) + (i - 49) + b
+            label_idx = (i - (N_BINS - 1)) + b
+            if labels[label_idx][2] == 1:  # closed eye → skip whole sample
+                skip = True
+                break 
+
             left = np.searchsorted(t_events, b_start, side='left')
             right = np.searchsorted(t_events, b_end, side='right')
             bin_events = events[left:right] if left < right else events[0:0]
 
             voxel_bin = events_to_voxel_gpu(bin_events, b_start, b_end)
             voxel_bins.append(voxel_bin.cpu())
-
-            # label index = first label (0) + (i - 49) + b
-            label_idx = (i - (N_BINS - 1)) + b
-            if labels[label_idx][2] == 1:  # closed eye → skip whole sample
-                skip = True
-                break 
 
             x_px, y_px = labels[label_idx][0], labels[label_idx][1]
             x_out = x_px * (W_OUT / W_ORIG)

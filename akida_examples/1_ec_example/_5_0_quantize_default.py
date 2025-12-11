@@ -21,6 +21,7 @@ import tensorflow as tf
 import onnx
 from onnx import shape_inference
 from tenns_modules import export_to_onnx
+import time
 
 # Model and dataset
 from training._2_5_model_uint8_akida import EyeTennSt
@@ -40,8 +41,8 @@ os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 # ============================================================
 
 # Paths
-MODEL_PATH = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_11_akida_b128_e100/best.pth") 
-DATA_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_fast")
+# MODEL_PATH = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_11_akida_b128_e100/best.pth") 
+MODEL_PATH = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_16_akida_b128_e150_ce_12mse_origpx/best.pth") 
 
 # Input / output sizes
 W, H = 640, 480              # Original input size (pixels)
@@ -52,11 +53,13 @@ BATCH_S = 8
 MAX_BATCH_NUMBER = 10
 
 # Output
-QUANTIZED_FOLDER_PATH = Path(f"akida_examples/1_ec_example/quantized_models/q8_default_b{BATCH_S}_n{MAX_BATCH_NUMBER}")
+QUANTIZED_FOLDER_PATH = Path(f"akida_examples/1_ec_example/quantized_models/q8_default_new_b{BATCH_S}_n{MAX_BATCH_NUMBER}")
 QUANTIZED_FOLDER_PATH.mkdir(exist_ok=True)
 
 print(f"Loading model from: {MODEL_PATH}")
-print(f"Using calibration data from: {DATA_ROOT/'train'}")
+
+timer = 0.0
+start_time = time.time()
 
 
 
@@ -133,9 +136,8 @@ tennst_model_time_ms = 0.0
 tennst_time_ms = 0.0
 
 with torch.no_grad():
-    for i, batch in enumerate(tqdm(test_loader, desc="Tennst", total=MAX_BATCH_NUMBER)):
-        if i >= MAX_BATCH_NUMBER:
-            break
+    for batch in tqdm(test_loader, desc="Tennst"):
+        
         x = batch['input'].to(DEVICE)      # [B,2,50,96,128] uint8
         y = batch['target'].to(DEVICE)     # [B,3,50,3,4] float32
 
@@ -172,7 +174,8 @@ tennst_time_ms /= samples
 print("\nTennst PyTorch model evaluation complete:")
 print(f"Tennst PyTorch model → Gaze L2: {tennst_l2:.3f} px | Size: {tennst_size_str} | Model Latency: {tennst_model_time_ms:.2f} ms | Total Latency: {tennst_time_ms:.2f} ms")
 
-
+timer = time.time() - start_time
+print(f"Time taken for Tennst evaluation: {timer:.2f} seconds")
 
 
 
@@ -301,6 +304,8 @@ print("Input shape:", [x.dim_value or x.dim_param for x in model_q8_onnx_int8.gr
 print("Output shape:", [x.dim_value or x.dim_param for x in model_q8_onnx_int8.graph.output[0].type.tensor_type.shape.dim])
 
 
+timer = time.time() - start_time
+print(f"Total time taken for quantization process: {timer:.2f} seconds")
 
 
 
@@ -347,9 +352,8 @@ def evaluate_model(model_q, model_path, name):
     total_q8_model_time_ms = 0.0
     total_q8_time_ms = 0.0
 
-    for i, batch in enumerate(tqdm(test_loader, total=MAX_BATCH_NUMBER)):
-        if i >= MAX_BATCH_NUMBER:
-            break
+    for batch in tqdm(test_loader):
+        
         for frame_idx in range(batch['input'].shape[2]):
             # batch['input'] -> [B,2,50,96,128] uint8 
             x_np = batch['input'][:, :, frame_idx, ...].float().numpy()   # [B,2,96,128] float32
@@ -364,19 +368,19 @@ def evaluate_model(model_q, model_path, name):
 
             # Convert to torch for get_out_gaze_point
             pred_t = torch.from_numpy(pred)
-            targ_t = torch.from_numpy(target)
-
-            # Extract gaze points in out cooridnates
+            
+            # Extract gaze points in out cooridnates +  Convert to original pixels: *160
             pred_x, pred_y, _, _ = get_out_gaze_point(pred_t, one_frame_only=True)
-            gt_x,   gt_y,   _, _ = get_out_gaze_point(targ_t, one_frame_only=True)
-
-            # Convert to original pixels: *160
             pred_px = pred_x * W / W_OUT 
             pred_py = pred_y * H / H_OUT
-            gt_px   = gt_x   * W / W_OUT
-            gt_py   = gt_y   * H / H_OUT
 
             total_latency_ms = (time.time() - start) * 1000
+
+            # Extract gaze points in out cooridnates +  Convert to original pixels: *160
+            targ_t = torch.from_numpy(target)
+            gt_x,   gt_y,   _, _ = get_out_gaze_point(targ_t, one_frame_only=True)
+            gt_px   = gt_x   * W / W_OUT
+            gt_py   = gt_y   * H / H_OUT
 
             error_l2_px = torch.sqrt((pred_px - gt_px)**2 + (pred_py - gt_py)**2).mean()
             total_error_px += error_l2_px.item()
@@ -466,4 +470,7 @@ with open(summary_path, "w") as f:
     f.write(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
 
 print(f"Clean L2 report saved → {summary_path}")
+
+timer = time.time() - start_time
+print(f"Total time taken for quantization evaluation: {timer:.2f} seconds")
 

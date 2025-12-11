@@ -38,7 +38,8 @@ os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 # ============================================================
 
 # Paths
-MODEL_PATH = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_11_akida_b128_e100/best.pth") 
+# MODEL_PATH = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_11_akida_b128_e100/best.pth") 
+MODEL_PATH = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_16_akida_b128_e150_ce_12mse_origpx/best.pth") 
 
 # Input / output sizes
 W, H = 640, 480              # Original input size (pixels)
@@ -49,7 +50,7 @@ BATCH_S = 8
 MAX_BATCH_NUMBER = 10
 
 # Output
-QUANTIZED_FOLDER_PATH = Path(f"akida_examples/1_ec_example/quantized_models/q8_calib_b{BATCH_S}_n{MAX_BATCH_NUMBER}")
+QUANTIZED_FOLDER_PATH = Path(f"akida_examples/1_ec_example/quantized_models/q8_calib_new_b{BATCH_S}_n{MAX_BATCH_NUMBER}")
 QUANTIZED_FOLDER_PATH.mkdir(exist_ok=True)
 
 
@@ -131,9 +132,8 @@ tennst_model_time_ms = 0.0
 tennst_time_ms = 0.0
 
 with torch.no_grad():
-    for i, batch in enumerate(tqdm(test_loader, desc="Tennst", total=MAX_BATCH_NUMBER)):
-        if i >= MAX_BATCH_NUMBER:
-            break
+    for batch in tqdm(test_loader, desc="Tennst"):
+        
         x = batch['input'].to(DEVICE)      # [B,2,50,96,128] uint8
         y = batch['target'].to(DEVICE)     # [B,3,50,3,4] float32
 
@@ -302,7 +302,7 @@ model_q8 = quantize(
     model_onnx,
     qparams=qparams_8bit,
     samples=calibration_samples, # without real samples, it will use [-127, 128] values
-    num_samples = MAX_BATCH_NUMBER * 50, # default = 1024
+    num_samples = MAX_BATCH_NUMBER * BATCH_S * 50, # default = 1024
     batch_size=BATCH_S, # default = 100
     epochs=1,
 )
@@ -379,9 +379,8 @@ def evaluate_model(model_q, model_path, name):
     total_q8_model_time_ms = 0.0
     total_q8_time_ms = 0.0
 
-    for i, batch in enumerate(tqdm(test_loader, total=MAX_BATCH_NUMBER)):
-        if i >= MAX_BATCH_NUMBER:
-            break
+    for batch in tqdm(test_loader):
+        
         for frame_idx in range(batch['input'].shape[2]):
             # batch['input'] -> [B,2,50,96,128] uint8 
             x_np = batch['input'][:, :, frame_idx, ...].float().numpy()   # [B,2,96,128] float32
@@ -396,21 +395,22 @@ def evaluate_model(model_q, model_path, name):
 
             # Convert to torch for get_out_gaze_point
             pred_t = torch.from_numpy(pred)
-            targ_t = torch.from_numpy(target)
-
-            # Extract gaze points in out cooridnates
+            
+            # Extract gaze points in out cooridnates + convert to pixels
             pred_x, pred_y, _, _ = get_out_gaze_point(pred_t, one_frame_only=True)
-            gt_x,   gt_y,   _, _ = get_out_gaze_point(targ_t, one_frame_only=True)
-
-            # Convert to original pixels: *160
             pred_px = pred_x * W / W_OUT 
             pred_py = pred_y * H / H_OUT
-            gt_px   = gt_x   * W / W_OUT
-            gt_py   = gt_y   * H / H_OUT
 
             total_latency_ms = (time.time() - start) * 1000
 
+            # Extract gaze points in out cooridnates + convert to pixels
+            targ_t = torch.from_numpy(target)
+            gt_x,   gt_y,   _, _ = get_out_gaze_point(targ_t, one_frame_only=True)
+            gt_px   = gt_x   * W / W_OUT
+            gt_py   = gt_y   * H / H_OUT
+
             error_l2_px = torch.sqrt((pred_px - gt_px)**2 + (pred_py - gt_py)**2).mean()
+
             total_error_px += error_l2_px.item()
             total_samples += x_np.shape[0]
             total_q8_model_time_ms += latency_ms

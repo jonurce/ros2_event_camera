@@ -1,7 +1,9 @@
 # 3_train.py
 # Full training script for EyeTennSt on your 13 GB int8 dataset
-# Input: [B, 10, 640, 480] int8 → 10 time bins (100 ms)
+# For input on the fly: reconstruct T=10 + convert to float16
+# Input: [B, 10, 640, 480] float16 → 10 time bins (100 ms)
 # Output: (x, y) gaze in pixels + eye state (0=open, 1=closed)
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -11,7 +13,9 @@ from datetime import datetime
 from pathlib import Path
 import numpy as np
 from tqdm import tqdm
-from _2_model_int8 import EyeTennSt
+from _2_3_model_f16_last_10_gradual import EyeTennSt
+import signal
+import time
 
 # TF32 can spike power on Ampere/Turing cards
 torch.backends.cuda.matmul.allow_tf32 = False
@@ -22,19 +26,24 @@ torch.backends.cudnn.benchmark = False
 #
 import os
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+os.environ["TORCH_LOGS"] = "" 
+os.environ["TORCH_COMPILE_DEBUG"] = "0"
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning, module="torch._dynamo")
+warnings.filterwarnings("ignore", category=UserWarning, module="torch._logging")
 
 # ============================================================
 # CONFIGURATION — NOW OPTIMIZED FOR SPEED
 # ============================================================
-BATCH_SIZE = 16   # was 4 → now 16 thanks to AMP!
-NUM_EPOCHS = 150
+BATCH_SIZE = 8  
+NUM_EPOCHS = 100
 LEARNING_RATE = 0.002
 WEIGHT_DECAY = 0.005
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Alienware paths
-DATA_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed")
-LOG_DIR = Path(f"/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_2_batch_{BATCH_SIZE}_epochs_{NUM_EPOCHS}")
+DATA_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_open")
+LOG_DIR = Path(f"/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/runs/tennst_2_11_8GB_b{BATCH_SIZE}_e{NUM_EPOCHS}")
 LOG_DIR.mkdir(exist_ok=True)
 LOG_FILE = LOG_DIR / f"training_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
 
@@ -42,7 +51,7 @@ print(f"Training on {DEVICE}")
 print(f"Batch size: {BATCH_SIZE}, Epochs: {NUM_EPOCHS}")
 
 # ============================================================
-# CUSTOM DATASET – builds 10-bin windows on-the-fly
+# CUSTOM DATASET – builds 10-bin windows on-the-fly + float16
 # ============================================================
 class EyeTrackingDataset(Dataset):
     def __init__(self, split="train"):
@@ -59,8 +68,10 @@ class EyeTrackingDataset(Dataset):
             if not voxels_path.exists() or not labels_path.exists():
                 continue
 
-            voxels = torch.load(voxels_path, map_location="cpu")  # [N, 640, 480] int8
-            labels = np.loadtxt(labels_path, dtype=np.int32) # [N, 4]: t, x, y, state
+            # Memory-map → zero RAM usage until accessed
+            voxels = torch.load(voxels_path, map_location="cpu", mmap=True, weights_only=True)  # [N, 640, 480] int8
+            labels = np.loadtxt(labels_path, dtype=np.float32) # [N, 4]: t, x, y, state
+
             self.recordings.append({
                 'rec_dir': rec_dir,
                 'voxels': voxels,
@@ -79,7 +90,8 @@ class EyeTrackingDataset(Dataset):
     def __getitem__(self, idx):
         rec_idx, frame_idx = self.samples[idx]
         item = self.recordings[rec_idx]
-        voxels = item['voxels']
+        # .to(torch.float16)
+        voxels = item['voxels'].half()  # [N, 640, 480] int8 to float16 
         labels = item['labels']
 
         # Build 10-bin window
@@ -87,18 +99,16 @@ class EyeTrackingDataset(Dataset):
         window = voxels[start_idx:frame_idx + 1]
         if window.shape[0] < 10:
             pad = 10 - window.shape[0]
-            padding = torch.zeros(pad, 640, 480, dtype=window.dtype)
+            padding = torch.zeros(pad, 640, 480, dtype=torch.float16)
             window = torch.cat([padding, window], dim=0)
 
         # Targets
-        x, y, state = labels[frame_idx, 1], labels[frame_idx, 2], labels[frame_idx, 3]
-        gaze_target = torch.tensor([x, y], dtype=torch.float32)
-        state_target = torch.tensor(state, dtype=torch.float32)
+        x, y = labels[frame_idx, 1], labels[frame_idx, 2]
+        target = torch.tensor([x, y], dtype=torch.float32)
 
         return {
-            'input': window,           # [10, 640, 480] int8
-            'gaze': gaze_target,
-            'state': state_target
+            'input': window,  # [10, 640, 480] float16
+            'target': target,  # [2] float32
         }
 
 # ============================================================
@@ -109,14 +119,14 @@ class SimpleLogger:
         self.csv_path = csv_path
         with open(csv_path, 'w', newline='') as f:
             writer = csv.writer(f)
-            writer.writerow(['epoch', 'train_loss', 'val_loss', 'val_gaze_mae_px', 'val_state_acc_%', 'lr'])
+            writer.writerow(['epoch', 'train_loss_mse', 'val_loss_mse', 'lr', 'epoch_time_sec'])
 
-    def log(self, epoch, train_loss, val_loss, val_gaze_mae, val_state_acc, lr):
+    def log(self, epoch, train_loss, val_loss, lr, epoch_time):
         with open(self.csv_path, 'a', newline='') as f:
             writer = csv.writer(f)
             writer.writerow([epoch+1, f"{train_loss:.4f}", f"{val_loss:.4f}",
-                           f"{val_gaze_mae:.2f}", f"{val_state_acc*100:.2f}", f"{lr:.6f}"])
-        print(f"Epoch {epoch+1} | Val MAE: {val_gaze_mae:.2f}px | State Acc: {val_state_acc*100:.2f}% | LR: {lr:.6f}")
+                           f"{lr:.6f}", f"{epoch_time:.2f}"])
+        print(f"Epoch {epoch+1} | Val MSE: {val_loss:.2f}px | LR: {lr:.6f} | Time: {epoch_time:.2f}s")
 
 # ============================================================
 # MAIN TRAINING LOOP — NOW WITH SPEED BOOSTS
@@ -125,63 +135,73 @@ def main():
     train_dataset = EyeTrackingDataset(split="train")
     val_dataset = EyeTrackingDataset(split="test")
 
-    # FAST DATALOADER: num_workers=16, persistent_workers, prefetch_factor
+    # FAST DATALOADER: num_workers=12, persistent_workers, prefetch_factor
     train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True,
-                              num_workers=16, persistent_workers=True, prefetch_factor=4,
+                              num_workers=12, persistent_workers=True, prefetch_factor=4,
                               pin_memory=True, drop_last=True)
     val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False,
-                            num_workers=16, persistent_workers=True, prefetch_factor=4,
+                            num_workers=12, persistent_workers=True, prefetch_factor=4,
                             pin_memory=True)
 
-    model = EyeTennSt(t_kernel_size=5, s_kernel_size=3, n_depthwise_layers=6).to(DEVICE)
+    # Model
+    torch.cuda.empty_cache()
+    model = EyeTennSt(t_kernel_size=5, s_kernel_size=3, n_depthwise_layers=4).to(DEVICE)
 
-    # Model, loss, optimizer -> TORCH.COMPILE — FREE 30–80% SPEEDUP
+    # DATA PARALLEL for multi-GPU setups
+    if torch.cuda.device_count() > 1:
+        print(f"Using {torch.cuda.device_count()} GPUs with DataParallel...")
+        model = torch.nn.DataParallel(model)
+
+    # TORCH.COMPILE — still great, now even more stable
     print("Compiling model with torch.compile()...")
-    model = torch.compile(model, mode="default")  # mode="max-autotune"
+    model = torch.compile(model, mode="reduce-overhead") # mode="default","max-autotune"
 
-    criterion_gaze = nn.MSELoss()
-    criterion_state = nn.BCEWithLogitsLoss()
+    criterion = nn.MSELoss()
     optimizer = optim.AdamW(model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
 
     # OneCycleLR – super fast convergence
     total_steps = len(train_loader) * NUM_EPOCHS
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=LEARNING_RATE,
-                                              total_steps=total_steps, pct_start=0.3,
+                                              total_steps=total_steps, pct_start=0.025,
                                               anneal_strategy='cos')
 
     # MIXED PRECISION — HUGE memory + speed win
-    scaler = torch.cuda.amp.GradScaler()
+    scaler = torch.amp.GradScaler('cuda') 
 
     # Logging
     logger = SimpleLogger(LOG_FILE)
     print(f"Logging to: {LOG_FILE}")
     best_val_loss = float('inf')
 
+    def save_on_interrupt(sig, frame):
+        print("\nCtrl+C detected! Saving current model as 'stopped.pth'...")
+        torch.save(model.state_dict(), f"{LOG_DIR}/stopped.pth")
+        print("Model saved. Exiting.")
+        exit(0)
+
+    signal.signal(signal.SIGINT, save_on_interrupt)
+    epoch_time = 0.0
+
     # Training loop
     for epoch in range(NUM_EPOCHS):
         model.train()
         train_loss_total = 0.0
-        train_gaze_mae = 0.0
-        train_state_acc = 0.0
+        epoch_start_time = time.time()
 
         pbar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{NUM_EPOCHS} [Train]")
 
         for batch in pbar:
-            # model expects [B, T, W, H] int8
+            # model expects [B, T, W, H] float16
             x = batch['input'].to(DEVICE, non_blocking=True) 
 
-            gaze_target = batch['gaze'].to(DEVICE, non_blocking=True)
-            state_target = batch['state'].to(DEVICE, non_blocking=True)
+            target = batch['target'].to(DEVICE, non_blocking=True)
 
             optimizer.zero_grad(set_to_none=True)  # faster than zero_grad()
 
             # MIXED PRECISION FORWARD + BACKWARD
-            # with torch.cuda.amp.autocast():
             with torch.amp.autocast('cuda'):
-                gaze_pred, state_logit = model(x)
-                loss_gaze = criterion_gaze(gaze_pred, gaze_target)
-                loss_state = criterion_state(state_logit, state_target)
-                loss = loss_gaze + 10.0 * loss_state
+                pred = model(x)
+                loss = criterion(pred, target)
 
             scaler.scale(loss).backward()
             scaler.step(optimizer)
@@ -190,39 +210,36 @@ def main():
 
             # Metrics
             train_loss_total += loss.item()
-            train_gaze_mae += torch.mean(torch.abs(gaze_pred - gaze_target)).item()
-            state_pred = (torch.sigmoid(state_logit) > 0.5).float()
-            train_state_acc += (state_pred == state_target).float().mean().item()
             pbar.set_postfix({'loss': f"{loss.item():.3f}", 'lr': f"{scheduler.get_last_lr()[0]:.6f}"})
 
+        epoch_time += time.time() - epoch_start_time
+
         # Validation every 5 epochs
-        if (epoch + 1) % 5 == 0 or epoch == NUM_EPOCHS - 1:
+        VAL_EPOCH_INTERVAL = 5
+        if (epoch + 1) % VAL_EPOCH_INTERVAL == 0 or epoch == NUM_EPOCHS - 1:
             model.eval()
-            val_loss_total = val_gaze_mae = val_state_acc = 0.0
+            val_loss_total = 0.0
             with torch.no_grad():
                 for batch in val_loader:
                     x = batch['input'].to(DEVICE, non_blocking=True)
-                    gaze_target = batch['gaze'].to(DEVICE)
-                    state_target = batch['state'].to(DEVICE)
+                    target = batch['target'].to(DEVICE, non_blocking=True)
 
-                    # with torch.cuda.amp.autocast():
                     with torch.amp.autocast('cuda'):
-                        gaze_pred, state_logit = model(x)
-                        loss = criterion_gaze(gaze_pred, gaze_target) + 10.0 * criterion_state(state_logit, state_target)
+                        pred = model(x)
+                        loss = criterion(pred, target)
 
                     val_loss_total += loss.item()
-                    val_gaze_mae += torch.mean(torch.abs(gaze_pred - gaze_target)).item()
-                    state_pred = (torch.sigmoid(state_logit) > 0.5).float()
-                    val_state_acc += (state_pred == state_target).float().mean().item()
 
             # Logging
+            n_train = len(train_loader)
             n_val = len(val_loader)
             logger.log(epoch,
-                       train_loss_total / len(train_loader),
+                       train_loss_total / n_train,
                        val_loss_total / n_val,
-                       val_gaze_mae / n_val,
-                       val_state_acc / n_val,
-                       scheduler.get_last_lr()[0])
+                       scheduler.get_last_lr()[0],
+                       epoch_time / VAL_EPOCH_INTERVAL)
+            
+            epoch_time = 0.0
 
             if val_loss_total < best_val_loss:
                 best_val_loss = val_loss_total

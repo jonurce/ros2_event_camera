@@ -19,7 +19,7 @@ H, W = 480, 640
 
 # Alienware paths
 DATA_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/event-based-eye-tracking-cvpr-2025/3ET+ dataset/event_data")
-OUTPUT_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_fast")
+OUTPUT_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_fast_open")
 OUTPUT_ROOT.mkdir(exist_ok=True)
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -108,6 +108,10 @@ def preprocess_recording(folder, split):
     valid_labels_out = []   # only keep labels where we have all 10 bins
 
     for i in range(N_BINS - 1, len(labels)):  # start when we have 10 bins
+        # closed eye → skip
+        if labels[i][2] == 1:  
+            continue
+
         t_label = (i + 1) * T_BIN
         t_start = t_label - N_BINS * T_BIN   # first bin start
         t_end   = t_label                    # last bin end
@@ -122,9 +126,17 @@ def preprocess_recording(folder, split):
 
         # Split into 10 (N_BINS) equal 10ms (T_BINS) bins
         bin_voxels = []
+        skip = False
+
         for b in range(N_BINS):
             b_start = t_start + b * T_BIN
             b_end   = b_start + T_BIN
+
+            # label index = first label (0) + (i - 10) + b
+            label_idx = (i - (N_BINS - 1)) + b
+            if labels[label_idx][2] == 1:  # closed eye → skip whole sample
+                skip = True
+                break 
 
             b_left  = np.searchsorted(t_events, b_start, side='left')
             b_right = np.searchsorted(t_events, b_end,   side='right')
@@ -136,11 +148,15 @@ def preprocess_recording(folder, split):
 
             bin_voxels.append(voxel.cpu())
 
+        if skip:
+            continue
+
         stacked = torch.stack(bin_voxels)  # [10, W, H]
         voxel_windows.append(stacked)
 
         valid_labels_out.append([t_label, labels[i][0], labels[i][1], labels[i][2]])
 
+        
     if len(voxel_windows) == 0:
         return 0
 

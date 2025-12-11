@@ -105,57 +105,69 @@ total_time_ms = 0.0
 print("\nEvaluating Akida SNN on test set...")
 pbar = tqdm(test_loader, desc="Akida SNN Eval", leave=True)
 
+# formatter for file sizes
+def format_size(b):
+    for unit in ['B', 'KB', 'MB', 'GB']:
+        if b < 1024: return f"{b:.1f}{unit}"
+        b /= 1024
+    return f"{b:.1f}GB"
+
 for batch in pbar:
-    # Input: [B, 2, 50, 96, 128] → we only need last frame for 4D model
-    # → take last timestep and convert to [B, 96, 128, 2] uint8
-    x = batch['input'][:, :, -1, :, :].numpy()       # [B, 2, 96, 128]
-    x = np.transpose(x, (0, 2, 3, 1))                # → [B, 96, 128, 2]
-    x = np.clip(x, 0, 1).astype(np.int8)        # ensure int8 (0,1)
+    for frame_idx in range(batch['input'].shape[2]):
 
-    # Ground truth: from [B, 3, 50, 3, 4] → we only need last frame for 4D model
-    target = batch['target'][:, :, -1, :, :].numpy()  # [B, C=3, H=3, W=4]
+        # Input: [B, 2, 50, 96, 128] → we only need frame_idx frame for 4D model
+        # → take frame_idx timestep and convert to [B, 96, 128, 2] uint8
 
-    # Akida inference
-    start = time.time()
-    pred = akida_model.predict(x)          # [B, H=3, W=4, C=3]
-    latency_ms = (time.time() - start) * 1000
+        x = batch['input'][:, :, frame_idx, :, :].numpy()       # [B, 2, 96, 128]
+        x = np.transpose(x, (0, 2, 3, 1))                # → [B, 96, 128, 2]
+        x = np.clip(x, 0, 1).astype(np.int8)        # ensure int8 (0,1)
 
-    # Convert to torch for your gaze function
-    pred_t = torch.from_numpy(pred)
-    pred_t = pred_t.permute(0, 3, 1, 2)    # [B, C=3, H=3, W=4]
-    
-    # Convert to pixels
-    pred_x, pred_y, _, _ = get_out_gaze_point(pred_t, one_frame_only=True)
-    pred_px = pred_x * W / W_OUT
-    pred_py = pred_y * H / H_OUT
+        # Ground truth: from [B, 3, 50, 3, 4] → we only need frame_idx frame for 4D model
+        target = batch['target'][:, :, frame_idx, :, :].numpy()  # [B, C=3, H=3, W=4]
 
-    total_latency_ms = (time.time() - start) * 1000
+        # Akida inference
+        start = time.time()
+        pred = akida_model.predict(x)          # [B, H=3, W=4, C=3]
+        latency_ms = (time.time() - start) * 1000
 
-    # Convert to pixels
-    targ_t = torch.from_numpy(target)
-    gt_x,   gt_y,   _, _ = get_out_gaze_point(targ_t, one_frame_only=True)
-    gt_px   = gt_x   * W / W_OUT
-    gt_py   = gt_y   * H / H_OUT
+        # Convert to torch for your gaze function
+        pred_t = torch.from_numpy(pred)
+        pred_t = pred_t.permute(0, 3, 1, 2)    # [B, C=3, H=3, W=4]
+        
+        # Convert to pixels
+        pred_x, pred_y, _, _ = get_out_gaze_point(pred_t, one_frame_only=True)
+        pred_px = pred_x * W / W_OUT
+        pred_py = pred_y * H / H_OUT
 
-    # L2 error
-    error_l2 = torch.sqrt((pred_px - gt_px)**2 + (pred_py - gt_py)**2).mean()
+        total_latency_ms = (time.time() - start) * 1000
 
-    # Accumulate results
-    total_error_px += error_l2.sum().item()
-    total_samples += x.shape[0]
-    total_model_time_ms += latency_ms
-    total_time_ms += total_latency_ms
+        # Convert to pixels
+        targ_t = torch.from_numpy(target)
+        gt_x,   gt_y,   _, _ = get_out_gaze_point(targ_t, one_frame_only=True)
+        gt_px   = gt_x   * W / W_OUT
+        gt_py   = gt_y   * H / H_OUT
+
+        # L2 error
+        error_l2 = torch.sqrt((pred_px - gt_px)**2 + (pred_py - gt_py)**2).mean()
+
+        # Accumulate results
+        total_error_px += error_l2.item()
+        total_samples += x.shape[0]
+        total_model_time_ms += latency_ms
+        total_time_ms += total_latency_ms
 
     pbar.set_postfix({"L2": total_error_px / total_samples ,
-                      "Model Lat(ms)": f"{total_model_time_ms / total_samples:.2f}",
-                      "Total Lat(ms)": f"{total_time_ms / total_samples:.2f}"})
+                        "Model Lat(ms)": f"{total_model_time_ms / total_samples:.2f}",
+                        "Total Lat(ms)": f"{total_time_ms / total_samples:.2f}"})
 
 # Final result
 akida_l2 = total_error_px / total_samples
+size_str = format_size(os.path.getsize(akida_path)) if akida_path.exists() else "N/A"
 akida_latency_ms = total_model_time_ms / total_samples
 akida_total_latency_ms = total_time_ms / total_samples
 print(f"\nAKIDA SNN FINAL RESULTS")
 print(f"Total samples: {total_samples}")
 print(f"Average L2 error: {akida_l2:.2f} px")
+print(f"Model size: {size_str}")
 print(f"Average Model latency (ms): {akida_latency_ms:.2f} ms → {1000/akida_latency_ms:.0f} FPS")
 print(f"Average Total latency (ms): {akida_total_latency_ms:.2f} ms → {1000/akida_total_latency_ms:.0f} FPS")

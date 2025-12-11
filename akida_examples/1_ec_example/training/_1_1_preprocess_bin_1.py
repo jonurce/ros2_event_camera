@@ -10,6 +10,7 @@ from tqdm import tqdm
 # CONFIG
 # ========================================
 T_LABELED = 10000
+N_BINS = 10   # we want 10 consecutive bins per sample (this affects skipping)
 H, W = 480, 640
 
 # Jetson paths
@@ -18,7 +19,7 @@ H, W = 480, 640
 
 # Alienware paths
 DATA_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/event-based-eye-tracking-cvpr-2025/3ET+ dataset/event_data")
-OUTPUT_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed")
+OUTPUT_ROOT = Path("/home/dronelab-pc-1/Jon/IndustrialProject/akida_examples/1_ec_example/training/preprocessed_open")
 OUTPUT_ROOT.mkdir(exist_ok=True)
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -110,9 +111,27 @@ def preprocess_recording(folder, split):
     valid_labels = []
 
     for i in range(len(labels)):
+        
+        # skip blinks
+        if labels[i][2] == 1:
+            continue  
+
         t_label = t_labels_us[i]
         t_start = max(0, t_label - T_LABELED)
         t_end = t_label
+
+        # check previous N_BINS labels for blinks
+        skip = False
+        for b in range(N_BINS):
+            # label index = first label (0) + (i - 10) + b
+            label_idx = (i - (N_BINS - 1)) + b
+            label_idx = max(0, label_idx)
+            if labels[label_idx][2] == 1:  # closed eye → skip whole sample
+                skip = True
+                break 
+
+        if skip:
+            continue
 
         left = np.searchsorted(t_events, t_start, side='left')
         right = np.searchsorted(t_events, t_end, side='right')
