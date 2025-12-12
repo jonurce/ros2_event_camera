@@ -9,11 +9,8 @@ downloads/
 akida_dw_edma/
 *.h5
 *label.txt
-*preprocessed/
-*preprocessed_fast/
-*preprocessed_open/
-*preprocessed_fast_open/
-*preprocessed_fast_compact/
-*preprocessed_akida/
-*preprocessed_akida_test_small/
-*runs/
+*.pt
+*labels.txt
+*pth
+*.csv
+*test_results.txt
