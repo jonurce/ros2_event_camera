@@ -157,4 +157,3 @@ print("Model mapped to hardware — ready for ultra-low power inference")
 
 # Check model mapping: NP allocation and binary size
 akida_model.summary()
-
