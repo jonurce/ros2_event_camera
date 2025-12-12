@@ -1,12 +1,12 @@
 
 # Akida SNN – Event-based Pupil-Centre Detection  
-**Master’s Thesis Project – Event-based Vision on BrainChip Akida Neuromorphic Hardware**
+**NTNU AIS4501 Specialisation Project – Event-based Vision on BrainChip Akida Neuromorphic Hardware**
 
 Repository: https://github.com/jonurce/Akida_SNN_Event_Cameras_Eye_Center_Detection  
 Author: Jon Urcelay  
 
 ## Overview
-This project fully reproduces (from scratch) BrainChip’s official event-based pupil-centre detection example using the Prophesee EVK4 event camera and the Akida AKD1000 neuromorphic accelerator. The complete Akida workflow is implemented and extensively documented:
+This project reproduces (from scratch) BrainChip’s official event-based pupil-centre detection example. During the projetc, the Prophesee EVK4 event camera and the Akida AKD1000 neuromorphic accelerator are used, but not used for inference with the final achieved SNN model. The complete Akida workflow is implemented and extensively documented:
 
 1. Training of spatio-temporal CNNs (tennst backbone)  
 2. INT-8 post-training quantization (default & custom calibration)  
@@ -16,11 +16,11 @@ This project fully reproduces (from scratch) BrainChip’s official event-based 
 The repository is divided into three main directories:
 
 ### /EC – Event Camera ROS 2 Pipeline
-Real-time event acquisition and spatio-temporal noise filtering (C++ / ROS 2 Humble).  
+Real-time event acquisition and spatio-temporal noise filtering (C++ / ROS 2 Humble Components).  
 Key folder: `/EC/src/composition` – contains the custom filter (±1 px, 50 ms, min 4 events).
 
 ### /RGB – Legacy Frame-based Experiments
-Initial YOLO-based object detection experiments (maritime context). Kept for completeness; not used in final results.
+Initial YOLO-based object detection experiments. Kept for completeness; not used in final results.
 
 ### /akida_examples – Core Project (Pupil-Centre Detection)
 All training, quantization, conversion and evaluation scripts.
@@ -30,6 +30,9 @@ All training, quantization, conversion and evaluation scripts.
 
 #### /akida_examples/1_ec_example
 Main working directory.
+
+##### quantized_models/
+Contains the quantized models and the akida converted SNN mdoels.
 
 ##### training/
 - `event-based-eye-tracking-cvpr-2025/` – raw dataset (CVPR 2025 challenge)  
@@ -60,20 +63,9 @@ Main working directory.
 | `_10_deploy_pi_akida.py` | Attempted deployment on real AKD1000 (fails due to IPv1/IPv2 mismatch) |
 
 ## Dependencies
+All dependencies can be found under `requirements.txt`, from which the core dependencies are:
 - Python 3.10/3.11  
 - PyTorch 2.x + CUDA  
 - TensorFlow 2.19 + MetaTF suite (akida, quantizeml, cnn2snn)  
 - Metavision SDK 4.3.0 (for event camera)  
 - ROS 2 Humble (for /EC folder)
-
-## Citation
-If you use this code or dataset in your research, please cite:
-
-```bibtex
-@misc{urcelay2025akida,
-  author = {Jon Urcelay},
-  title = {Event-based Pupil Centre Detection with Spiking Neural Networks on BrainChip Akida},
-  year = {2025},
-  publisher = {GitHub},
-  url = {https://github.com/jonurce/Akida_SNN_Event_Cameras_Eye_Center_Detection}
-}
