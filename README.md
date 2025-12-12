@@ -26,13 +26,13 @@ Key folder: `/EC/src/composition` – contains the custom filter (±1 px, 50 ms,
 ### /RGB – Legacy Frame-based Experiments
 Initial YOLO-based object detection experiments. Kept for completeness; not used in final results.
 
-### /akida_examples – Core Project (Pupil-Centre Detection)
+### /AKIDA – Core Project (Pupil-Centre Detection)
 All training, quantization, conversion and evaluation scripts.
 
-#### /akida_examples/0_global_workflow
+#### /AKIDA/0_global_workflow
 - `0_global_akida_workflow.py` – sanity-check that MetaTF and Akida environment is correctly installed.
 
-#### /akida_examples/1_ec_example
+#### /AKIDA/1_ec_example
 Main working directory.
 
 ##### quantized_models/
@@ -65,6 +65,9 @@ Contains the quantized models and the akida converted SNN mdoels.
 | `_8_convert.py` | CNN → Akida SNN conversion |
 | `_9_test_snn.py` | Evaluate converted SNN on virtual IPv2 device |
 | `_10_deploy_pi_akida.py` | Attempted deployment on real AKD1000 (fails due to IPv1/IPv2 mismatch) |
+
+#### /AKIDA/2_custom_v1
+Working directory for creating a new model compatible with Akida IPv1 (work in progress after finishing project submission).
 
 ## Dependencies
 All dependencies can be found under `requirements.txt`, from which the core dependencies are:
