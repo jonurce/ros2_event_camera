@@ -13,6 +13,10 @@ This project reproduces (from scratch) BrainChip’s official event-based pupil-
 3. CNN-to-SNN conversion  
 4. Mapping to virtual (IPv2) and attempted mapping to physical (IPv1) Akida device  
 
+Find all details on the project report `AIS4501_Specialisation_Project_Report.pdf`. A one-page poster summary is also included in `AIS4501_One_Page_Summary_Poster.pdf`.
+
+## Repository Description
+
 The repository is divided into three main directories:
 
 ### /EC – Event Camera ROS 2 Pipeline
