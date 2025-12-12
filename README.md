@@ -1,7 +1,79 @@
-# RGB vc Event Cameras for maritime surface object detection
 
-Work in progress
+# Akida SNN – Event-based Pupil-Centre Detection  
+**Master’s Thesis Project – Event-based Vision on BrainChip Akida Neuromorphic Hardware**
 
+Repository: https://github.com/jonurce/Akida_SNN_Event_Cameras_Eye_Center_Detection  
+Author: Jon Urcelay  
 
+## Overview
+This project fully reproduces (from scratch) BrainChip’s official event-based pupil-centre detection example using the Prophesee EVK4 event camera and the Akida AKD1000 neuromorphic accelerator. The complete Akida workflow is implemented and extensively documented:
 
+1. Training of spatio-temporal CNNs (tennst backbone)  
+2. INT-8 post-training quantization (default & custom calibration)  
+3. CNN-to-SNN conversion  
+4. Mapping to virtual (IPv2) and attempted mapping to physical (IPv1) Akida device  
 
+The repository is divided into three main directories:
+
+### /EC – Event Camera ROS 2 Pipeline
+Real-time event acquisition and spatio-temporal noise filtering (C++ / ROS 2 Humble).  
+Key folder: `/EC/src/composition` – contains the custom filter (±1 px, 50 ms, min 4 events).
+
+### /RGB – Legacy Frame-based Experiments
+Initial YOLO-based object detection experiments (maritime context). Kept for completeness; not used in final results.
+
+### /akida_examples – Core Project (Pupil-Centre Detection)
+All training, quantization, conversion and evaluation scripts.
+
+#### /akida_examples/0_global_workflow
+- `0_global_akida_workflow.py` – sanity-check that MetaTF and Akida environment is correctly installed.
+
+#### /akida_examples/1_ec_example
+Main working directory.
+
+##### training/
+- `event-based-eye-tracking-cvpr-2025/` – raw dataset (CVPR 2025 challenge)  
+- `preprocessed_akida/` – final dataset used for Akida example replication  
+- `preprocessed_akida_test_small/` – small test subset for Raspberry Pi deployment  
+- `preprocessed_fast_open/` & `preprocessed_open/` – datasets for Simplified Tennst experiments  
+- `runs/` – trained FP32 models (TensorBoard logs, checkpoints)  
+- `plots/` – generated figures  
+
+##### Key scripts (numbered workflow)
+| Script | Purpose |
+|-------|--------|
+| `_0_check_cuda.py` | Verify CUDA availability |
+| `_0_discover_dataset.py` | Explore raw dataset statistics |
+| `_1_1_preprocess_bin_1.py` | Generate collapsed-temporal dataset (T=T=1) |
+| `_1_2_preprocess_bin_10.py` | Generate T=10 dataset |
+| `_1_4_preprocess_akida.py` | Generate final Akida-compatible dataset |
+| `_2_3_model_f16_last_10_gradual.py` | Simplified Tennst definition |
+| `_2_5_model_uint8_akida.py` | Akida Example Tennst replica |
+| `_3_2_train_fast.py` / `_3_3_train_fast_dataset_10.py` / `_3_4_train_fast_akida.py` | Training scripts |
+| `_4_*_test_*.py` | Evaluation & visualisation |
+| `_5_0_quantize_default.py` | INT-8 quantization (default calibration) |
+| `_5_1_quantize_calib.py` | INT-8 quantization with custom calibration samples |
+| `_6_qat.py` | (Failed) QAT attempt |
+| `_7_prep_akida_test_small.py` | Create tiny test set for Pi |
+| `_8_convert.py` | CNN → Akida SNN conversion |
+| `_9_test_snn.py` | Evaluate converted SNN on virtual IPv2 device |
+| `_10_deploy_pi_akida.py` | Attempted deployment on real AKD1000 (fails due to IPv1/IPv2 mismatch) |
+
+## Dependencies
+- Python 3.10/3.11  
+- PyTorch 2.x + CUDA  
+- TensorFlow 2.19 + MetaTF suite (akida, quantizeml, cnn2snn)  
+- Metavision SDK 4.3.0 (for event camera)  
+- ROS 2 Humble (for /EC folder)
+
+## Citation
+If you use this code or dataset in your research, please cite:
+
+```bibtex
+@misc{urcelay2025akida,
+  author = {Jon Urcelay},
+  title = {Event-based Pupil Centre Detection with Spiking Neural Networks on BrainChip Akida},
+  year = {2025},
+  publisher = {GitHub},
+  url = {https://github.com/jonurce/Akida_SNN_Event_Cameras_Eye_Center_Detection}
+}
