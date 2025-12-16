@@ -74,23 +74,54 @@ print("Output shape:", [x.dim_value or x.dim_param for x in model_q8_onnx.graph.
 
 print("\nDefining original Keras model...")
 
-model_keras = tf_keras.Sequential([
-    # Rescaling (standard, maps fine)
-    tf_keras.layers.Rescaling(1. / 255, input_shape=(28, 28, 1)),
-    
-    # First conv (maps to InputConvolutional/Convolutional in v1)
-    tf_keras.layers.Conv2D(filters=32, kernel_size=3, strides=2, padding='valid', activation=None),
-    tf_keras.layers.ReLU(max_value=6.0),  # Bounded ReLU for conversion
-    
-    # Separable conv (maps to SeparableConvolutional in v1)
-    tf_keras.layers.SeparableConv2D(filters=64, kernel_size=3, strides=2, padding='same', activation=None),
-    tf_keras.layers.ReLU(max_value=6.0),
-    
-    # Final head
-    tf_keras.layers.Flatten(),
-    tf_keras.layers.Dense(10, activation=None)  # Softmax in loss or post-process
-], name='testing_model_v1_compatible')
+def create_v1_tennst(input_shape=(96, 128, 2)):  # Input: [H=96, W=128, C=2] (no T)
+    model = tf_keras.Sequential(name="v1_compatible_tennst")
 
+    # Initial input layer [96, 128, 2]
+    model.add(tf_keras.layers.Input(shape=input_shape))  
+
+    # Initial 1x1 conv to expand features Output: [96, 128, 8]
+    model.add(tf_keras.layers.Conv2D(filters=8, kernel_size=1, strides=1, padding='same', use_bias=False))
+    model.add(tf_keras.layers.ReLU(max_value=6.0))
+
+    # Block 1: output: [48, 64, 16]  (strides=2 halves H and W)
+    model.add(tf_keras.layers.SeparableConv2D(filters=16, kernel_size=3, strides=2, padding='same', use_bias=False))
+    model.add(tf_keras.layers.ReLU(max_value=6.0))  
+    # Output: [24, 32, 16]  (pooling halves again)
+    model.add(tf_keras.layers.MaxPooling2D(pool_size=2, padding='same'))
+    
+
+    # Block 2: output: [12, 16, 32]
+    model.add(tf_keras.layers.SeparableConv2D(filters=32, kernel_size=3, strides=2, padding='same', use_bias=False))
+    model.add(tf_keras.layers.ReLU(max_value=6.0))
+    # Output: [6, 8, 32]
+    model.add(tf_keras.layers.MaxPooling2D(pool_size=2, padding='same'))
+
+    # Block 3: output: [3, 4, 48]
+    model.add(tf_keras.layers.SeparableConv2D(filters=48, kernel_size=3, strides=2, padding='same', use_bias=False))
+    model.add(tf_keras.layers.ReLU(max_value=6.0)) 
+    # Output: [2, 2, 48]  (with padding='same', it may round up/down differently)
+    model.add(tf_keras.layers.MaxPooling2D(pool_size=2, padding='same'))
+
+    # Block 4: Output: [1, 1, 80]  (strides=2 on 2x2 → 1x1)
+    model.add(tf_keras.layers.SeparableConv2D(filters=80, kernel_size=3, strides=2, padding='same', use_bias=False))
+    model.add(tf_keras.layers.ReLU(max_value=6.0))
+
+    # Block 5 (depthwise-like): Output: [1, 1, 112]  (strides=2 on 1x1 remains 1x1)
+    model.add(tf_keras.layers.SeparableConv2D(filters=112, kernel_size=3, strides=2, padding='same', use_bias=False))
+    model.add(tf_keras.layers.ReLU(max_value=6.0)) 
+
+    # Final head: output: [1, 1, 256]
+    model.add(tf_keras.layers.Conv2D(filters=256, kernel_size=1, use_bias=False))
+    model.add(tf_keras.layers.ReLU(max_value=6.0)) 
+    # Final output: [1, 1, 3]  (confidence, x-offset, y-offset)
+    model.add(tf_keras.layers.Conv2D(filters=3, kernel_size=1, activation=None))
+    
+
+    return model
+
+# Test
+model_keras = create_v1_tennst()
 model_keras.summary()
 
 
@@ -105,8 +136,8 @@ model_keras.summary()
 print("\nQuantizing...")
 
 qparams = quantizeml.models.QuantizationParams(
-    # input_dtype='int8',
-    input_weight_bits=8,
+    input_dtype='int8',
+    input_weight_bits=4,
     weight_bits=4, # could be 4 for Akida 1.0
     activation_bits=4, # could be 4 for Akida 1.0
 )
@@ -189,7 +220,7 @@ try:
  
     akida_model_q4.summary()
 
-    akida_path = AKIDA_FOLDER_PATH / "akida_v1.fbz"
+    akida_path = AKIDA_FOLDER_PATH / "akida_v1_tennst.fbz"
     akida_model_q4.save(str(akida_path))
     print("Akida SNN model saved → ", akida_path)
     
@@ -221,7 +252,7 @@ print(f"Akida model MACs: {akida_model_q4.macs}\n")
 virtual_device_v1 = akida.AKD1000()  
 virtual_device_v2 = akida.SixNodesIPv2()
 
-print(f"Virtual device IP: {virtual_device_v1.ip_version}") 
+print(f"Virtual device IP: {virtual_device_v1.ip_version}")  # IpVersion.v2
 
 
 akida_model_q4.map(virtual_device_v1)  
